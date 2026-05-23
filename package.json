@@ -6,12 +6,13 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --port 54329",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
+    "@fontsource-variable/nunito-sans": "^5.2.7",
     "@lucide/astro": "^1.16.0",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.3.7",

@@ -1,0 +1,241 @@
+---
+const SIZE = 280;
+const CX = SIZE / 2;
+const CY = SIZE / 2;
+const R = SIZE / 2 - 10;
+---
+
+<div id="analog-clock-wrap" class="flex flex-col items-center gap-4 py-4">
+  <svg
+    id="analog-clock-svg"
+    viewBox={`0 0 ${SIZE} ${SIZE}`}
+    width={SIZE}
+    height={SIZE}
+    class="w-full max-w-70"
+    aria-label="Analog prayer times clock"
+  >
+    <!-- Clock face -->
+    <circle cx={CX} cy={CY} r={R} class="clock-face"></circle>
+
+    <!-- Hour tick marks -->
+    {
+      Array.from({ length: 60 }).map((_, i) => {
+        const angle = (i / 60) * 360;
+        const rad = (angle - 90) * (Math.PI / 180);
+        const major = i % 5 === 0;
+        const outer = R - 2;
+        const inner = major ? R - 14 : R - 8;
+        const x1 = CX + outer * Math.cos(rad);
+        const y1 = CY + outer * Math.sin(rad);
+        const x2 = CX + inner * Math.cos(rad);
+        const y2 = CY + inner * Math.sin(rad);
+        return (
+          <line
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            class={major ? "clock-tick-major" : "clock-tick"}
+            stroke-width={major ? 2 : 1}
+            stroke-linecap="round"
+          />
+        );
+      })
+    }
+
+    <!-- Hour numbers 12 3 6 9 -->
+    {
+      [12, 3, 6, 9].map((n) => {
+        const angle = ((n === 12 ? 0 : n) / 12) * 360;
+        const rad = (angle - 90) * (Math.PI / 180);
+        const dist = R - 26;
+        const x = CX + dist * Math.cos(rad);
+        const y = CY + dist * Math.sin(rad);
+        return (
+          <text
+            x={x}
+            y={y}
+            text-anchor="middle"
+            dominant-baseline="central"
+            font-size="14"
+            font-weight="700"
+            fill="var(--text-muted)"
+            font-family="var(--font-sans)"
+          >
+            {n}
+          </text>
+        );
+      })
+    }
+
+    <!-- Prayer hands -->
+    <g id="prayer-hands"></g>
+
+    <!-- Current time hand -->
+    <g id="time-hand"></g>
+
+    <!-- Center dot -->
+    <circle cx={CX} cy={CY} r="5" fill="var(--accent)"></circle>
+  </svg>
+
+  <!-- Legend -->
+  <div
+    id="clock-legend"
+    class="hidden flex-wrap justify-center gap-x-4 gap-y-1 max-w-75"
+  >
+  </div>
+</div>
+
+<script>
+  import type { PrayerEntry } from "../scripts/prayers";
+  import { timeToClockAngle } from "../scripts/prayers";
+
+  const CX = 140;
+  const CY = 140;
+  const R = 130;
+
+  function handCoords(angleDeg: number, length: number) {
+    const rad = (angleDeg - 90) * (Math.PI / 180);
+    return {
+      x: CX + length * Math.cos(rad),
+      y: CY + length * Math.sin(rad),
+    };
+  }
+
+  function makeLine(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    color: string,
+    width: number,
+    opacity = 1,
+  ): SVGLineElement {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", String(x1));
+    line.setAttribute("y1", String(y1));
+    line.setAttribute("x2", String(x2));
+    line.setAttribute("y2", String(y2));
+    line.setAttribute("stroke", color);
+    line.setAttribute("stroke-width", String(width));
+    line.setAttribute("stroke-linecap", "round");
+    line.setAttribute("opacity", String(opacity));
+    return line;
+  }
+
+  function renderPrayerHands(prayers: PrayerEntry[]) {
+    const handsGroup = document.getElementById("prayer-hands");
+    const legendEl = document.getElementById("clock-legend");
+    if (!handsGroup || !legendEl) return;
+
+    handsGroup.innerHTML = "";
+    legendEl.innerHTML = "";
+
+    for (const prayer of prayers) {
+      const angle = timeToClockAngle(prayer.ts);
+      const tip = handCoords(angle, R - 22);
+      const base = handCoords(angle, -10);
+
+      // Thin colored prayer hand
+      const line = makeLine(
+        base.x,
+        base.y,
+        tip.x,
+        tip.y,
+        prayer.color,
+        1.8,
+        0.9,
+      );
+      handsGroup.appendChild(line);
+
+      // Small circle at tip
+      const dot = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle",
+      );
+      dot.setAttribute("cx", String(tip.x));
+      dot.setAttribute("cy", String(tip.y));
+      dot.setAttribute("r", "3.5");
+      dot.setAttribute("fill", prayer.color);
+      dot.setAttribute("opacity", "0.9");
+      handsGroup.appendChild(dot);
+
+      // Legend entry
+      const item = document.createElement("div");
+      item.className = "flex items-center gap-1 text-xs font-semibold";
+      item.innerHTML = `<span style="width:10px;height:10px;border-radius:50%;background:${prayer.color};display:inline-block;flex-shrink:0;"></span><span>${prayer.name}</span>`;
+      legendEl.appendChild(item);
+    }
+
+    legendEl.classList.remove("hidden");
+    legendEl.classList.add("flex");
+  }
+
+  function renderCurrentHand(nowSec: number) {
+    const handGroup = document.getElementById("time-hand");
+    if (!handGroup) return;
+    handGroup.innerHTML = "";
+
+    const d = new Date(nowSec * 1000);
+    const hours = d.getHours() % 12;
+    const mins = d.getMinutes();
+    const secs = d.getSeconds();
+
+    // Minute hand
+    const minuteAngle = (mins / 60) * 360 + (secs / 60) * 6;
+    // Hour hand
+    const hourAngle = (hours / 12) * 360 + (mins / 60) * 30;
+
+    // Minute hand
+    const minuteTail = handCoords(minuteAngle + 180, R * 0.12);
+    const minuteTip = handCoords(minuteAngle, R * 0.8);
+    handGroup.appendChild(
+      makeLine(
+        minuteTail.x,
+        minuteTail.y,
+        minuteTip.x,
+        minuteTip.y,
+        "var(--text)",
+        2.5,
+      ),
+    );
+
+    // Hour hand
+    const hourTail = handCoords(hourAngle + 180, R * 0.12);
+    const hourTip = handCoords(hourAngle, R * 0.52);
+    handGroup.appendChild(
+      makeLine(hourTail.x, hourTail.y, hourTip.x, hourTip.y, "var(--text)", 5),
+    );
+
+    // Seconds hand
+    const secondAngle = (secs / 60) * 360;
+    const secondTail = handCoords(secondAngle + 180, R * 0.18);
+    const secondTip = handCoords(secondAngle, R * 0.88);
+    handGroup.appendChild(
+      makeLine(
+        secondTail.x,
+        secondTail.y,
+        secondTip.x,
+        secondTip.y,
+        "#D13438",
+        1.4,
+      ),
+    );
+  }
+
+  let currentPrayers: PrayerEntry[] = [];
+
+  function tick() {
+    const nowSec = Math.floor(Date.now() / 1000);
+    renderCurrentHand(nowSec);
+  }
+
+  window.addEventListener("prayerDataLoaded", (e) => {
+    currentPrayers = (e as CustomEvent).detail.prayers;
+    renderPrayerHands(currentPrayers);
+    tick();
+  });
+
+  // Update every second so the minute hand moves smoothly
+  setInterval(tick, 1_000);
+</script>

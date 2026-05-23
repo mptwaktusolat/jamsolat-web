@@ -1,1 +1,261 @@
 @import "tailwindcss";
+@import "@fontsource-variable/nunito-sans";
+
+@theme {
+  --font-sans: "Nunito Sans Variable", "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Metro design tokens ── */
+:root {
+  /* accent like Windows 8 blue */
+  --accent: #0078D4;
+  --accent-light: #2899F5;
+  --accent-dim: rgba(0, 120, 212, 0.12);
+
+  /* surfaces */
+  --bg: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-card: #ededed;
+
+  /* text */
+  --text: #111111;
+  --text-muted: #6b6b6b;
+
+  /* border */
+  --border: #e0e0e0;
+
+  /* monthly table states */
+  --table-row-active: #d9f3ee;
+  --table-row-hover: #e8f4fb;
+}
+
+[data-theme="dark"] {
+  --accent: #2899F5;
+  --accent-light: #60BAFF;
+  --accent-dim: rgba(40, 153, 245, 0.15);
+
+  --bg: #000000;
+  --bg-secondary: #111111;
+  --bg-card: #1a1a1a;
+
+  --text: #f0f0f0;
+  --text-muted: #888888;
+
+  --border: #2a2a2a;
+
+  --table-row-active: rgba(68, 168, 154, 0.34);
+  --table-row-hover: rgba(92, 149, 191, 0.28);
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Nunito Sans Variable", "Nunito Sans", var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.btn-metro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  text-transform: uppercase;
+}
+.btn-metro:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Inline zone selector under date ── */
+.zone-inline-wrap {
+  color: var(--text-muted);
+}
+
+.zone-picker {
+  position: relative;
+  max-width: min(100%, 34rem);
+  padding-right: 1.2rem;
+}
+
+.zone-display-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+select.zone-overlay-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.zone-picker:focus-within .zone-display-text {
+  color: var(--accent);
+}
+
+.zone-actions {
+  margin-top: 0.45rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.zone-action-link {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.zone-action-link:hover {
+  color: var(--accent);
+}
+
+/* ── Skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-secondary) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Prayer tile like Metro live tile style ── */
+.prayer-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 0.45rem;
+  min-height: 172px;
+  /* background & color set per-prayer by JS */
+  transition: background-color 0.2s, color 0.2s;
+  cursor: default;
+  user-select: none;
+}
+
+.prayer-tile-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 7.4rem;
+}
+
+.prayer-tile-countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 639px) {
+  .prayer-tile {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: auto;
+    padding: 1rem 0.75rem;
+  }
+
+  .prayer-tile-main {
+    align-items: flex-start;
+    min-height: auto;
+    flex: 1;
+  }
+
+  .prayer-name {
+    margin-bottom: 0.3rem !important;
+  }
+
+  .prayer-time {
+    font-size: clamp(1.45rem, 8vw, 1.95rem) !important;
+  }
+
+  .prayer-ampm {
+    margin-top: 0.25rem !important;
+  }
+
+  .prayer-tile-divider {
+    display: none !important;
+  }
+
+  .prayer-tile-countdown {
+    align-items: flex-end;
+    text-align: right;
+    margin-left: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .prayer-countdown-label {
+    font-size: 0.56rem !important;
+  }
+
+  .prayer-countdown-time {
+    font-size: 1rem !important;
+    margin-top: 0.12rem !important;
+  }
+}
+
+  /* ── Monthly table row states ── */
+  .month-row {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease, outline-color 0.15s ease;
+  }
+
+  .month-row:hover {
+    background: var(--table-row-hover);
+  }
+
+  .month-row-active,
+  .month-row-active:hover {
+    background: var(--table-row-active);
+    outline: 1px solid var(--table-row-active);
+  }
+
+/* ── Analog clock face ── */
+.clock-face {
+  fill: var(--bg-secondary);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+.clock-tick       { stroke: var(--text-muted); }
+.clock-tick-major { stroke: var(--text); stroke-width: 2; }

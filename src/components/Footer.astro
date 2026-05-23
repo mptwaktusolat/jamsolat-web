@@ -1,0 +1,92 @@
+---
+import { Clock7, Sun, Moon, Monitor } from "@lucide/astro";
+---
+
+<footer class="border-t border-(--border) bg-(--bg)">
+  <div
+    class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div
+        class="w-8 h-8 bg-(--accent) flex items-center justify-center shrink-0"
+      >
+        <Clock7 size={16} class="text-white" />
+      </div>
+      <p class="text-sm text-(--text-muted) leading-snug">
+        <span class="font-semibold text-(--text)">JamSolat</span>
+        by
+        <a
+          href="https://waktusolat.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-(--accent) hover:underline"
+        >
+          Waktu Solat Project
+        </a>
+      </p>
+    </div>
+
+    <button
+      id="theme-toggle"
+      class="btn-metro p-2 text-xs"
+      title="Toggle theme"
+      aria-label="Toggle colour theme"
+    >
+      <Sun id="icon-light" size={16} class="hidden" />
+      <Moon id="icon-dark" size={16} class="hidden" />
+      <Monitor id="icon-system" size={16} class="hidden" />
+    </button>
+  </div>
+</footer>
+
+<script>
+  const THEME_KEY = "jsolat-theme";
+  type ThemeMode = "system" | "light" | "dark";
+
+  function getStoredTheme(): ThemeMode {
+    const v = localStorage.getItem(THEME_KEY);
+    return v === "light" || v === "dark" || v === "system" ? v : "system";
+  }
+
+  function applyTheme(mode: ThemeMode) {
+    let resolved: "light" | "dark";
+    if (mode === "system") {
+      resolved = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    } else {
+      resolved = mode;
+    }
+
+    document.documentElement.setAttribute("data-theme", resolved);
+
+    document
+      .getElementById("icon-light")
+      ?.classList.toggle("hidden", mode !== "light");
+    document
+      .getElementById("icon-dark")
+      ?.classList.toggle("hidden", mode !== "dark");
+    document
+      .getElementById("icon-system")
+      ?.classList.toggle("hidden", mode !== "system");
+  }
+
+  function cycleTheme() {
+    const current = getStoredTheme();
+    const next: ThemeMode =
+      current === "system" ? "light" : current === "light" ? "dark" : "system";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  }
+
+  applyTheme(getStoredTheme());
+  document
+    .getElementById("theme-toggle")
+    ?.addEventListener("click", cycleTheme);
+
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", () => {
+      if (getStoredTheme() === "system") applyTheme("system");
+    });
+</script>
