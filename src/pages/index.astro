@@ -1,11 +1,453 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from "../layouts/Layout.astro";
+import Countdown from "../components/Countdown.astro";
+import PrayerList from "../components/PrayerList.astro";
+import MonthlyPrayerTable from "../components/MonthlyPrayerTable.astro";
+import Footer from "../components/Footer.astro";
 ---
 
 <Layout>
-	<Welcome />
+  <main class="max-w-7xl mx-auto flex flex-col lg:h-screen">
+    <!-- Error state -->
+    <div
+      id="page-error"
+      class="hidden px-6 py-3 bg-red-600 text-white font-semibold text-sm tracking-wide text-center"
+    >
+    </div>
+
+    <!-- Row 1: Clock (left) + Countdown (right) -->
+    <div
+      class="grid grid-cols-1 lg:grid-cols-2 border-b border-(--border) lg:flex-1 min-h-0"
+    >
+      <!-- Clock -->
+      <section class="px-6 py-10 lg:py-5">
+        <div
+          id="live-clock"
+          class="mt-8 font-light tabular-nums leading-none text-(--accent)"
+          style="font-size: clamp(2.8rem, 10vw, 5.5rem); letter-spacing: -0.02em;"
+          aria-live="polite"
+          aria-label="Current time"
+        >
+          --:--
+        </div>
+        <div
+          id="live-date"
+          class="text-(--text-muted) text-sm font-medium uppercase tracking-widest mt-3"
+        >
+          N/A
+        </div>
+
+        <div class="zone-inline-wrap mt-4">
+          <div class="zone-picker">
+            <div
+              id="zone-display"
+              class="zone-display-text text-sm font-medium uppercase tracking-widest"
+            >
+              Memuat zon...
+            </div>
+            <select
+              id="zone-select"
+              class="zone-overlay-select"
+              aria-label="Select prayer zone"
+            >
+              <option value="">Memuat zon...</option>
+            </select>
+          </div>
+
+          <div class="zone-actions">
+            <a href="#" id="change-location" class="zone-action-link">
+              Change location
+            </a>
+            <a href="#" id="use-current-location" class="zone-action-link">
+              Use current location
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Countdown -->
+      <section
+        class="px-6 py-10 lg:py-5 border-t border-(--border) lg:border-t-0 lg:border-l lg:border-(--border)"
+      >
+        <Countdown />
+      </section>
+    </div>
+
+    <!-- Row 2: Prayer tiles -->
+    <section class="px-6 py-10 lg:py-5 lg:mt-auto">
+      <div
+        class="text-xs font-semibold uppercase tracking-[0.25em] text-(--text-muted) mb-6 lg:mb-4"
+      >
+        Waktu Solat Hari Ini
+      </div>
+      <PrayerList />
+
+      <a
+        href="#monthly-timetable"
+        class="mt-8 mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--text-muted) hover:text-(--accent) transition-colors"
+        aria-label="Lihat jadual waktu solat sebulan di bawah"
+      >
+        <span aria-hidden="true">↓</span>
+        Lihat Jadual Sebulan Di Bawah
+      </a>
+    </section>
+  </main>
+
+  <section
+    id="monthly-timetable"
+    class="max-w-7xl mx-auto px-6 py-8 border-t border-(--border)"
+  >
+    <MonthlyPrayerTable />
+  </section>
+
+  <Footer />
 </Layout>
+
+<script>
+  import {
+    fetchPrayerTimes,
+    fetchPrayerTimesByGPS,
+    fetchAllZones,
+  } from "../scripts/api";
+  import { getPrayersForDay } from "../scripts/prayers";
+  import type { V2Response, ZoneInfo } from "../scripts/api";
+
+  const DEFAULT_ZONE = "WLY01";
+
+  // ── State ───────────────────────────────────────────────────────────────────
+  let currentZone = DEFAULT_ZONE;
+  let monthlyData: V2Response | null = null;
+  let lastLoadedDayKey: string | null = null;
+  let rolloverTimer: number | null = null;
+
+  function getDayKey(d: Date): string {
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  }
+
+  async function refreshIfDayChanged() {
+    const todayKey = getDayKey(new Date());
+    if (todayKey === lastLoadedDayKey) return;
+    await loadData();
+  }
+
+  function scheduleNextDayRollover() {
+    if (rolloverTimer !== null) window.clearTimeout(rolloverTimer);
+
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      1,
+      0,
+    );
+    const delayMs = Math.max(1000, nextMidnight.getTime() - now.getTime());
+
+    rolloverTimer = window.setTimeout(async () => {
+      await refreshIfDayChanged();
+      scheduleNextDayRollover();
+    }, delayMs);
+  }
+
+  // ── Live clock ──────────────────────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours();
+    const m = String(now.getMinutes()).padStart(2, "0");
+    const s = String(now.getSeconds()).padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
+
+    const clockEl = document.getElementById("live-clock");
+    if (clockEl) clockEl.textContent = `${h12}:${m}:${s} ${ampm}`;
+
+    const dateEl = document.getElementById("live-date");
+    if (dateEl) {
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+  }
+
+  // ── URL helpers ─────────────────────────────────────────────────────────────
+  function readURLParams() {
+    const params = new URLSearchParams(window.location.search);
+    const loc = params.get("location");
+    if (loc) currentZone = loc.toUpperCase();
+  }
+
+  function pushURL() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("location", currentZone);
+    history.pushState({}, "", url);
+  }
+
+  // ── Data fetching ────────────────────────────────────────────────────────────
+  async function loadData() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+
+    try {
+      monthlyData = await fetchPrayerTimes(currentZone, year, month);
+    } catch (err) {
+      const errEl = document.getElementById("page-error");
+      if (errEl) {
+        errEl.textContent =
+          "Gagal memuat waktu solat. Sila semak sambungan internet anda.";
+        errEl.classList.remove("hidden");
+      }
+      return;
+    }
+
+    const prayers = getPrayersForDay(monthlyData, day);
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    window.dispatchEvent(
+      new CustomEvent("prayerDataLoaded", {
+        detail: {
+          prayers,
+          nowSec,
+          zone: currentZone,
+          monthly: monthlyData,
+          day,
+        },
+      }),
+    );
+
+    lastLoadedDayKey = getDayKey(today);
+  }
+
+  // ── Geolocation ──────────────────────────────────────────────────────────────
+  function tryGeolocation(options: { fallbackToDefault?: boolean } = {}) {
+    const fallbackToDefault = options.fallbackToDefault ?? true;
+
+    if (!("geolocation" in navigator)) {
+      if (fallbackToDefault) {
+        resolveZone(DEFAULT_ZONE);
+        void loadData();
+      }
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = today.getMonth() + 1;
+          const gpsData = await fetchPrayerTimesByGPS(
+            latitude,
+            longitude,
+            year,
+            month,
+          );
+          currentZone = gpsData.zone;
+          monthlyData = gpsData;
+          resolveZone(currentZone);
+          const day = today.getDate();
+          const prayers = getPrayersForDay(gpsData, day);
+          const nowSec = Math.floor(Date.now() / 1000);
+          window.dispatchEvent(
+            new CustomEvent("prayerDataLoaded", {
+              detail: {
+                prayers,
+                nowSec,
+                zone: currentZone,
+                monthly: gpsData,
+                day,
+              },
+            }),
+          );
+          lastLoadedDayKey = getDayKey(today);
+          pushURL();
+        } catch {
+          if (fallbackToDefault) {
+            resolveZone(DEFAULT_ZONE);
+            await loadData();
+          }
+        }
+      },
+      () => {
+        // Permission denied or error
+        if (fallbackToDefault) {
+          resolveZone(DEFAULT_ZONE);
+          void loadData();
+        }
+      },
+      { timeout: 8000 },
+    );
+  }
+
+  function resolveZone(zone: string) {
+    currentZone = zone;
+    window.dispatchEvent(new CustomEvent("zoneResolved", { detail: { zone } }));
+  }
+
+  // ── Zone selector ───────────────────────────────────────────────────────────
+  async function populateZones(selectedZone: string) {
+    const select = document.getElementById(
+      "zone-select",
+    ) as HTMLSelectElement | null;
+    if (!select) return;
+
+    let zones: ZoneInfo[];
+    try {
+      zones = await fetchAllZones();
+    } catch {
+      select.innerHTML = `<option value="${selectedZone}">${selectedZone}</option>`;
+      updateZoneDisplay();
+      return;
+    }
+
+    const byState = new Map<string, ZoneInfo[]>();
+    for (const z of zones) {
+      if (!byState.has(z.negeri)) byState.set(z.negeri, []);
+      byState.get(z.negeri)!.push(z);
+    }
+
+    select.innerHTML = "";
+    for (const [state, zoneList] of byState) {
+      const group = document.createElement("optgroup");
+      group.label = state;
+
+      for (const z of zoneList) {
+        const opt = document.createElement("option");
+        opt.value = z.jakimCode;
+        opt.textContent = `${z.jakimCode} · ${z.daerah}`;
+        if (z.jakimCode === selectedZone) opt.selected = true;
+        group.appendChild(opt);
+      }
+
+      select.appendChild(group);
+    }
+
+    updateZoneDisplay();
+  }
+
+  function updateZoneDisplay() {
+    const select = document.getElementById(
+      "zone-select",
+    ) as HTMLSelectElement | null;
+    const display = document.getElementById("zone-display");
+    if (!select || !display) return;
+
+    const selectedText =
+      select.selectedOptions[0]?.textContent?.trim() ||
+      select.value ||
+      "Pilih zon";
+    display.textContent = selectedText;
+  }
+
+  // ── Event handlers ───────────────────────────────────────────────────────────
+  document.getElementById("zone-select")?.addEventListener("change", (e) => {
+    const zone = (e.target as HTMLSelectElement).value;
+    updateZoneDisplay();
+    window.dispatchEvent(new CustomEvent("zoneChanged", { detail: { zone } }));
+  });
+
+  document.getElementById("change-location")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    const select = document.getElementById(
+      "zone-select",
+    ) as HTMLSelectElement | null;
+    if (!select) return;
+
+    const picker = (select as HTMLSelectElement & { showPicker?: () => void })
+      .showPicker;
+    if (picker) {
+      try {
+        picker.call(select);
+        return;
+      } catch {}
+    }
+
+    select.focus();
+    select.click();
+  });
+
+  document
+    .getElementById("use-current-location")
+    ?.addEventListener("click", (e) => {
+      e.preventDefault();
+      tryGeolocation({ fallbackToDefault: false });
+    });
+
+  window.addEventListener("zoneResolved", async (e) => {
+    const { zone } = (e as CustomEvent).detail;
+    await populateZones(zone);
+    const select = document.getElementById(
+      "zone-select",
+    ) as HTMLSelectElement | null;
+    if (select) {
+      select.value = zone;
+      updateZoneDisplay();
+    }
+  });
+
+  window.addEventListener("zoneChanged", async (e) => {
+    const { zone } = (e as CustomEvent).detail;
+    currentZone = zone;
+    monthlyData = null;
+    pushURL();
+    window.dispatchEvent(new CustomEvent("zoneResolved", { detail: { zone } }));
+    await loadData();
+  });
+
+  // popstate (browser back/forward)
+  window.addEventListener("popstate", () => {
+    readURLParams();
+    resolveZone(currentZone);
+    void loadData();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    void refreshIfDayChanged();
+  });
+
+  window.addEventListener("focus", () => {
+    void refreshIfDayChanged();
+  });
+
+  // ── Bootstrap ────────────────────────────────────────────────────────────────
+  updateClock();
+  setInterval(updateClock, 1000);
+  readURLParams();
+  scheduleNextDayRollover();
+
+  if (new URLSearchParams(window.location.search).has("location")) {
+    // use currentZone from URL, skip geolocation
+    resolveZone(currentZone);
+    loadData();
+  } else {
+    // Try geolocation first
+    resolveZone(DEFAULT_ZONE); // immediately show WLY01 while we wait
+    loadData();
+    tryGeolocation();
+  }
+</script>

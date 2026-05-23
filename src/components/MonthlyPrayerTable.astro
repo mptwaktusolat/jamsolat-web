@@ -1,0 +1,150 @@
+<section id="monthly-prayer-table" aria-label="Waktu solat sebulan">
+  <div
+    class="text-xs font-semibold uppercase tracking-[0.25em] text-(--text-muted) mb-3"
+  >
+    Jadual Waktu Solat Sebulan
+  </div>
+  <div id="month-table-meta" class="text-sm text-(--text-muted) mb-4">
+    Memuat data bulan semasa...
+  </div>
+
+  <div id="month-table-loading" class="space-y-2">
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+    <div class="skeleton h-9 w-full"></div>
+  </div>
+
+  <div
+    id="month-table-wrap"
+    class="hidden overflow-x-auto border border-(--border)"
+  >
+    <table class="w-full min-w-225 border-collapse text-sm">
+      <thead>
+        <tr class="bg-(--bg-secondary)">
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Hari</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Hijri</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Subuh</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Syuruk</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Zohor</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Asar</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Maghrib</th
+          >
+          <th
+            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Isyak</th
+          >
+        </tr>
+      </thead>
+      <tbody id="month-table-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+  import type { V2Response } from "../scripts/api";
+
+  function format24(tsSec: number): string {
+    const d = new Date(tsSec * 1000);
+    const h = String(d.getHours()).padStart(2, "0");
+    const m = String(d.getMinutes()).padStart(2, "0");
+    return `${h}:${m}`;
+  }
+
+  function renderMonthTable(monthly: V2Response, currentDay: number) {
+    const metaEl = document.getElementById("month-table-meta");
+    const body = document.getElementById("month-table-body");
+    const loading = document.getElementById("month-table-loading");
+    const wrap = document.getElementById("month-table-wrap");
+
+    if (!metaEl || !body || !loading || !wrap) return;
+
+    metaEl.textContent = `${monthly.zone} • ${monthly.month} ${monthly.year}`;
+    body.innerHTML = "";
+
+    for (const p of monthly.prayers) {
+      const row = document.createElement("tr");
+      row.className = "month-row";
+
+      if (p.day === currentDay) {
+        row.classList.add("month-row-active");
+      }
+
+      const dayCell = document.createElement("td");
+      dayCell.className = "px-3 py-2.5 font-semibold";
+      dayCell.textContent = String(p.day);
+      if (p.day === currentDay) dayCell.style.color = "var(--accent)";
+
+      const hijriCell = document.createElement("td");
+      hijriCell.className = "px-3 py-2.5";
+      hijriCell.style.color = "var(--text-muted)";
+      hijriCell.textContent = p.hijri;
+
+      const fajrCell = document.createElement("td");
+      fajrCell.className = "px-3 py-2.5 tabular-nums";
+      fajrCell.textContent = format24(p.fajr);
+
+      const syurukCell = document.createElement("td");
+      syurukCell.className = "px-3 py-2.5 tabular-nums";
+      syurukCell.textContent = format24(p.syuruk);
+
+      const dhuhrCell = document.createElement("td");
+      dhuhrCell.className = "px-3 py-2.5 tabular-nums";
+      dhuhrCell.textContent = format24(p.dhuhr);
+
+      const asrCell = document.createElement("td");
+      asrCell.className = "px-3 py-2.5 tabular-nums";
+      asrCell.textContent = format24(p.asr);
+
+      const maghribCell = document.createElement("td");
+      maghribCell.className = "px-3 py-2.5 tabular-nums";
+      maghribCell.textContent = format24(p.maghrib);
+
+      const ishaCell = document.createElement("td");
+      ishaCell.className = "px-3 py-2.5 tabular-nums";
+      ishaCell.textContent = format24(p.isha);
+
+      row.appendChild(dayCell);
+      row.appendChild(hijriCell);
+      row.appendChild(fajrCell);
+      row.appendChild(syurukCell);
+      row.appendChild(dhuhrCell);
+      row.appendChild(asrCell);
+      row.appendChild(maghribCell);
+      row.appendChild(ishaCell);
+      body.appendChild(row);
+    }
+
+    loading.classList.add("hidden");
+    wrap.classList.remove("hidden");
+  }
+
+  window.addEventListener("prayerDataLoaded", (e) => {
+    const { monthly, day } = (e as CustomEvent).detail as {
+      monthly?: V2Response;
+      day?: number;
+    };
+    if (!monthly || !day) return;
+    renderMonthTable(monthly, day);
+  });
+</script>
