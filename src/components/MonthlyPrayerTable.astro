@@ -19,39 +19,43 @@
     id="month-table-wrap"
     class="hidden overflow-x-auto border border-(--border)"
   >
-    <table class="w-full min-w-225 border-collapse text-sm">
+    <table class="w-full min-w-225 table-fixed border-collapse text-sm">
       <thead>
         <tr class="bg-(--bg-secondary)">
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Hari</th
+            class="w-14 text-left align-middle px-3 py-2.5 border-b border-(--border) font-semibold whitespace-nowrap"
+            >No.</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Date</th
+          >
+          <th
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Hijri</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Subuh</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Syuruk</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Zohor</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Asar</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Maghrib</th
           >
           <th
-            class="text-left px-3 py-2.5 border-b border-(--border) font-semibold"
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Isyak</th
           >
         </tr>
@@ -69,6 +73,21 @@
     const h = String(d.getHours()).padStart(2, "0");
     const m = String(d.getMinutes()).padStart(2, "0");
     return `${h}:${m}`;
+  }
+
+  function formatShortDateWithDay(day: number, month: number, year: number) {
+    const date = new Date(year, month - 1, day);
+    const shortDate = date
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
+      .replace(/\s+/g, "-");
+    const shortDay = date.toLocaleDateString("en-GB", {
+      weekday: "short",
+    });
+    return `${shortDate} (${shortDay})`;
   }
 
   function renderMonthTable(monthly: V2Response, currentDay: number) {
@@ -91,40 +110,52 @@
       }
 
       const dayCell = document.createElement("td");
-      dayCell.className = "px-3 py-2.5 font-semibold";
+      dayCell.className =
+        "w-14 text-left align-middle px-3 py-2.5 font-semibold whitespace-nowrap";
       dayCell.textContent = String(p.day);
       if (p.day === currentDay) dayCell.style.color = "var(--accent)";
 
+      const dateCell = document.createElement("td");
+      dateCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
+      dateCell.textContent = formatShortDateWithDay(
+        p.day,
+        monthly.month_number,
+        monthly.year,
+      );
+
       const hijriCell = document.createElement("td");
-      hijriCell.className = "px-3 py-2.5";
+      hijriCell.className = "text-center align-middle px-3 py-2.5";
       hijriCell.style.color = "var(--text-muted)";
       hijriCell.textContent = p.hijri;
 
       const fajrCell = document.createElement("td");
-      fajrCell.className = "px-3 py-2.5 tabular-nums";
+      fajrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
       fajrCell.textContent = format24(p.fajr);
 
       const syurukCell = document.createElement("td");
-      syurukCell.className = "px-3 py-2.5 tabular-nums";
+      syurukCell.className =
+        "text-center align-middle px-3 py-2.5 tabular-nums";
       syurukCell.textContent = format24(p.syuruk);
 
       const dhuhrCell = document.createElement("td");
-      dhuhrCell.className = "px-3 py-2.5 tabular-nums";
+      dhuhrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
       dhuhrCell.textContent = format24(p.dhuhr);
 
       const asrCell = document.createElement("td");
-      asrCell.className = "px-3 py-2.5 tabular-nums";
+      asrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
       asrCell.textContent = format24(p.asr);
 
       const maghribCell = document.createElement("td");
-      maghribCell.className = "px-3 py-2.5 tabular-nums";
+      maghribCell.className =
+        "text-center align-middle px-3 py-2.5 tabular-nums";
       maghribCell.textContent = format24(p.maghrib);
 
       const ishaCell = document.createElement("td");
-      ishaCell.className = "px-3 py-2.5 tabular-nums";
+      ishaCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
       ishaCell.textContent = format24(p.isha);
 
       row.appendChild(dayCell);
+      row.appendChild(dateCell);
       row.appendChild(hijriCell);
       row.appendChild(fajrCell);
       row.appendChild(syurukCell);
