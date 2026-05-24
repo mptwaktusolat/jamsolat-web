@@ -1,6 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Countdown from "../components/Countdown.astro";
 import PrayerList from "../components/PrayerList.astro";
 import MonthlyPrayerTable from "../components/MonthlyPrayerTable.astro";
 import Footer from "../components/Footer.astro";
@@ -15,63 +14,55 @@ import Footer from "../components/Footer.astro";
     >
     </div>
 
-    <!-- Row 1: Clock (left) + Countdown (right) -->
-    <div
-      class="grid grid-cols-1 lg:grid-cols-2 border-b border-(--border) lg:flex-1 min-h-0"
+    <!-- Clock -->
+    <section
+      class="px-6 py-10 lg:py-5 flex-1 flex flex-col items-center justify-center text-center"
     >
-      <!-- Clock -->
-      <section class="px-6 py-10 lg:py-5">
-        <div
-          id="live-clock"
-          class="mt-8 font-light tabular-nums leading-none text-(--accent)"
-          style="font-size: clamp(2.8rem, 10vw, 5.5rem); letter-spacing: -0.02em;"
-          aria-live="polite"
-          aria-label="Current time"
-        >
-          --:--
-        </div>
-        <div
-          id="live-date"
-          class="text-(--text-muted) text-sm font-medium uppercase tracking-widest mt-3"
-        >
-          N/A
-        </div>
-
-        <div class="zone-inline-wrap mt-4">
-          <div class="zone-picker">
-            <div
-              id="zone-display"
-              class="zone-display-text text-sm font-medium uppercase tracking-widest"
-            >
-              Memuat zon...
-            </div>
-            <select
-              id="zone-select"
-              class="zone-overlay-select"
-              aria-label="Select prayer zone"
-            >
-              <option value="">Memuat zon...</option>
-            </select>
-          </div>
-
-          <div class="zone-actions">
-            <a href="#" id="change-location" class="zone-action-link">
-              Change location
-            </a>
-            <a href="#" id="use-current-location" class="zone-action-link">
-              Use current location
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Countdown -->
-      <section
-        class="px-6 py-10 lg:py-5 border-t border-(--border) lg:border-t-0 lg:border-l lg:border-(--border)"
+      <div
+        id="live-date"
+        class="my-8 text-(--text-muted) font-bold text-base sm:text-lg lg:text-4xl max-w-5xl"
       >
-        <Countdown />
-      </section>
-    </div>
+        N/A
+      </div>
+
+      <div
+        id="live-clock"
+        class="font-light tabular-nums leading-none text-(--accent) text-center text-[clamp(3.5rem,14vw,8.5rem)] xl:text-[clamp(4.25rem,11vw,10rem)] 2xl:text-[clamp(4.5rem,9vw,11rem)] tracking-[-0.02em]"
+        aria-live="polite"
+        aria-label="Current time"
+      >
+        --:--
+      </div>
+
+      <div
+        class="zone-inline-wrap max-w-5xl mt-6 w-full flex flex-col items-center"
+      >
+        <div class="zone-picker">
+          <div
+            id="zone-display"
+            class="zone-display-text text-sm md:text-lg lg:text-2xl xl:text-3xl font-semibold tracking-[0.08em]"
+          >
+            Memuat zon...
+          </div>
+          <select
+            id="zone-select"
+            class="zone-overlay-select"
+            aria-label="Select prayer zone"
+          >
+            <option value="">Memuat zon...</option>
+          </select>
+        </div>
+
+        <div class="zone-actions justify-center">
+          <a href="#" id="change-location" class="zone-action-link">
+            Change location
+          </a>
+          <a href="#" id="use-current-location" class="zone-action-link">
+            Use current location
+          </a>
+        </div>
+      </div>
+    </section>
 
     <!-- Row 2: Prayer tiles -->
     <section class="px-6 py-10 lg:py-5 lg:mt-auto">
@@ -120,6 +111,27 @@ import Footer from "../components/Footer.astro";
   let lastLoadedDayKey: string | null = null;
   let rolloverTimer: number | null = null;
 
+  const gregorianFormatter = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  function getHijriDate(now: Date): string | null {
+    if (!monthlyData) return null;
+    if (
+      monthlyData.year !== now.getFullYear() ||
+      monthlyData.month_number !== now.getMonth() + 1
+    ) {
+      return null;
+    }
+
+    return (
+      monthlyData.prayers.find((p) => p.day === now.getDate())?.hijri ?? null
+    );
+  }
+
   function getDayKey(d: Date): string {
     return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
   }
@@ -165,30 +177,11 @@ import Footer from "../components/Footer.astro";
 
     const dateEl = document.getElementById("live-date");
     if (dateEl) {
-      const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const months = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-      dateEl.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+      const gregorianDate = gregorianFormatter.format(now);
+      const hijriDate = getHijriDate(now);
+      dateEl.textContent = hijriDate
+        ? `${gregorianDate} · Hijri ${hijriDate}`
+        : gregorianDate;
     }
   }
 
@@ -240,6 +233,7 @@ import Footer from "../components/Footer.astro";
     );
 
     lastLoadedDayKey = getDayKey(today);
+    updateClock();
   }
 
   // ── Geolocation ──────────────────────────────────────────────────────────────
@@ -284,6 +278,7 @@ import Footer from "../components/Footer.astro";
             }),
           );
           lastLoadedDayKey = getDayKey(today);
+          updateClock();
           pushURL();
         } catch {
           if (fallbackToDefault) {

@@ -102,7 +102,6 @@ html {
 
 .zone-picker {
   position: relative;
-  max-width: min(100%, 34rem);
   padding-right: 1.2rem;
 }
 
