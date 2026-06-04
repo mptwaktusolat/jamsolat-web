@@ -107,13 +107,13 @@
 
       if (p.day === currentDay) {
         row.classList.add("month-row-active");
+        row.classList.add("font-bold");
       }
 
       const dayCell = document.createElement("td");
       dayCell.className =
         "w-14 text-left align-middle px-3 py-2.5 font-semibold whitespace-nowrap";
       dayCell.textContent = String(p.day);
-      if (p.day === currentDay) dayCell.style.color = "var(--accent)";
 
       const dateCell = document.createElement("td");
       dateCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
@@ -125,7 +125,6 @@
 
       const hijriCell = document.createElement("td");
       hijriCell.className = "text-center align-middle px-3 py-2.5";
-      hijriCell.style.color = "var(--text-muted)";
       hijriCell.textContent = p.hijri;
 
       const fajrCell = document.createElement("td");
