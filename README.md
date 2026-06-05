@@ -10,6 +10,12 @@ JamSolat is a site to view Malaysia daily prayer times, built with [Astro](https
 2. Install dependencies with `pnpm install`
 3. Start dev server with `pnpm run dev`
 
+Or quickly run with Docker compose:
+
+```bash
+docker compose -f compose.debug.yaml up
+```
+
 ## API
 
 JamSolat uses Waktu Solat Malaysia API: https://api.waktusolat.app. The data is sourced from the official JAKIM e-Solat page.

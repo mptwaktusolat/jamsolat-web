@@ -1,0 +1,10 @@
+services:
+  jamsolatweb:
+    image: jamsolat-web
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    ports:
+      - 54329:54329
