@@ -25,10 +25,6 @@ export function setCached<T>(
   data: T,
   ttlMs: number = TTL_MS,
 ): void {
-  try {
-    const entry: CacheEntry<T> = { data, expiresAt: Date.now() + ttlMs };
-    localStorage.setItem(key, JSON.stringify(entry));
-  } catch {
-    // ignore storage quota errors
-  }
+  const entry: CacheEntry<T> = { data, expiresAt: Date.now() + ttlMs };
+  localStorage.setItem(key, JSON.stringify(entry));
 }
