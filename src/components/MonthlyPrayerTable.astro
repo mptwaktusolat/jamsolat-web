@@ -19,7 +19,7 @@
     id="month-table-wrap"
     class="hidden overflow-x-auto border border-(--border)"
   >
-    <table class="w-full min-w-225 table-fixed border-collapse text-sm">
+    <table class="w-full min-w-275 table-fixed border-collapse text-sm">
       <thead>
         <tr class="bg-(--bg-secondary)">
           <th
@@ -36,11 +36,19 @@
           >
           <th
             class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Imsak</th
+          >
+          <th
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Subuh</th
           >
           <th
             class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
             >Syuruk</th
+          >
+          <th
+            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
+            >Dhuha</th
           >
           <th
             class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
@@ -127,6 +135,11 @@
       hijriCell.className = "text-center align-middle px-3 py-2.5";
       hijriCell.textContent = p.hijri;
 
+      const imsakCell = document.createElement("td");
+      imsakCell.className =
+        "text-center align-middle px-3 py-2.5 tabular-nums";
+      imsakCell.textContent = format24(p.imsak);
+
       const fajrCell = document.createElement("td");
       fajrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
       fajrCell.textContent = format24(p.fajr);
@@ -135,6 +148,11 @@
       syurukCell.className =
         "text-center align-middle px-3 py-2.5 tabular-nums";
       syurukCell.textContent = format24(p.syuruk);
+
+      const dhuhaCell = document.createElement("td");
+      dhuhaCell.className =
+        "text-center align-middle px-3 py-2.5 tabular-nums";
+      dhuhaCell.textContent = format24(p.dhuha);
 
       const dhuhrCell = document.createElement("td");
       dhuhrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
@@ -156,8 +174,10 @@
       row.appendChild(dayCell);
       row.appendChild(dateCell);
       row.appendChild(hijriCell);
+      row.appendChild(imsakCell);
       row.appendChild(fajrCell);
       row.appendChild(syurukCell);
+      row.appendChild(dhuhaCell);
       row.appendChild(dhuhrCell);
       row.appendChild(asrCell);
       row.appendChild(maghribCell);

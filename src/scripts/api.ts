@@ -5,8 +5,10 @@ const BASE = "https://api.waktusolat.app";
 export interface V2Prayer {
   day: number;
   hijri: string;
+  imsak: number;
   fajr: number;
   syuruk: number;
+  dhuha: number;
   dhuhr: number;
   asr: number;
   maghrib: number;
