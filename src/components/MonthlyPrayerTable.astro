@@ -75,6 +75,7 @@
 
 <script>
   import type { V2Response } from "../scripts/api";
+  import { formatHijriDate } from "../scripts/hijri";
 
   function format24(tsSec: number): string {
     const d = new Date(tsSec * 1000);
@@ -133,7 +134,7 @@
 
       const hijriCell = document.createElement("td");
       hijriCell.className = "text-center align-middle px-3 py-2.5";
-      hijriCell.textContent = p.hijri;
+      hijriCell.textContent = formatHijriDate(p.hijri, "short");
 
       const imsakCell = document.createElement("td");
       imsakCell.className =

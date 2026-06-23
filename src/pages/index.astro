@@ -100,6 +100,7 @@ import Footer from "../components/Footer.astro";
     fetchPrayerTimesByGPS,
     fetchAllZones,
   } from "../scripts/api";
+  import { formatHijriDate } from "../scripts/hijri";
   import { getPrayersForDay } from "../scripts/prayers";
   import type { V2Response, ZoneInfo } from "../scripts/api";
 
@@ -180,7 +181,10 @@ import Footer from "../components/Footer.astro";
       const gregorianDate = gregorianFormatter.format(now);
       const hijriDate = getHijriDate(now);
       dateEl.textContent = hijriDate
-        ? `${gregorianDate} · Hijri ${hijriDate}`
+        ? `${gregorianDate} · ${formatHijriDate(hijriDate, {
+            padDay: false,
+            yearSuffix: "H",
+          })}`
         : gregorianDate;
     }
   }
