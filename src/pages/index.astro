@@ -14,39 +14,46 @@ import Footer from "../components/Footer.astro";
     >
     </div>
 
-    <!-- Clock -->
+    <!-- Next prayer countdown -->
     <section
       class="px-6 py-10 lg:py-5 flex-1 flex flex-col items-center justify-center text-center"
     >
       <div
         id="live-date"
-        class="my-8 text-(--text-muted) font-bold text-base sm:text-lg lg:text-4xl max-w-5xl"
+        class="mt-8 mb-12 text-(--text) font-bold text-lg sm:text-xl lg:text-5xl max-w-5xl"
       >
         N/A
       </div>
 
-      <div
-        id="live-clock"
-        class="font-light tabular-nums leading-none text-(--accent) text-center text-[clamp(3.5rem,14vw,8.5rem)] xl:text-[clamp(4.25rem,11vw,10rem)] 2xl:text-[clamp(4.5rem,9vw,11rem)] tracking-[-0.02em]"
-        aria-live="polite"
-        aria-label="Current time"
-      >
-        --:--
+      <div class="flex flex-col items-center" aria-live="polite">
+        <div
+          id="next-prayer-countdown"
+          class="font-light tabular-nums leading-none text-(--accent) text-center text-[clamp(4rem,15vw,9.25rem)] xl:text-[clamp(4.75rem,12vw,10.75rem)] 2xl:text-[clamp(5rem,10vw,11.75rem)] tracking-[0.04em]"
+          aria-label="Countdown to next prayer"
+        >
+          --:--:--
+        </div>
+        <div
+          id="next-prayer-label"
+          class="mt-6 text-(--text) text-base sm:text-xl lg:text-4xl font-semibold"
+        >
+          Memuat waktu solat
+        </div>
       </div>
 
       <div
-        class="zone-inline-wrap max-w-5xl mt-6 w-full flex flex-col items-center"
+        class="zone-inline-wrap max-w-5xl mt-12 w-full flex flex-col items-center"
       >
         <div class="zone-picker">
           <div
             id="zone-display"
-            class="zone-display-text text-sm md:text-lg lg:text-2xl xl:text-3xl font-semibold tracking-[0.08em]"
+            class="zone-display-text text-xs sm:text-sm lg:text-lg xl:text-xl font-semibold tracking-[0.08em]"
           >
             Memuat zon...
           </div>
           <select
             id="zone-select"
-            class="zone-overlay-select"
+            class="zone-hidden-select"
             aria-label="Select prayer zone"
           >
             <option value="">Memuat zon...</option>
@@ -101,16 +108,26 @@ import Footer from "../components/Footer.astro";
     fetchAllZones,
   } from "../scripts/api";
   import { formatHijriDate } from "../scripts/hijri";
-  import { getPrayersForDay } from "../scripts/prayers";
+  import {
+    formatCountdown,
+    getCountdownSeconds,
+    getNextPrayer,
+    getPrayersForDay,
+  } from "../scripts/prayers";
   import type { V2Response, ZoneInfo } from "../scripts/api";
+  import type { PrayerEntry } from "../scripts/prayers";
 
   const DEFAULT_ZONE = "WLY01";
 
-  // ── State ───────────────────────────────────────────────────────────────────
+  // State
   let currentZone = DEFAULT_ZONE;
   let monthlyData: V2Response | null = null;
+  let currentPrayers: PrayerEntry[] = [];
   let lastLoadedDayKey: string | null = null;
   let rolloverTimer: number | null = null;
+  let tomorrowFirstPrayer: PrayerEntry | null = null;
+  let tomorrowFirstPrayerKey: string | null = null;
+  let tomorrowFirstPrayerRequestKey: string | null = null;
 
   const gregorianFormatter = new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
@@ -164,18 +181,8 @@ import Footer from "../components/Footer.astro";
     }, delayMs);
   }
 
-  // ── Live clock ──────────────────────────────────────────────────────────────
-  function updateClock() {
+  function updateDate() {
     const now = new Date();
-    const h = now.getHours();
-    const m = String(now.getMinutes()).padStart(2, "0");
-    const s = String(now.getSeconds()).padStart(2, "0");
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = h % 12 || 12;
-
-    const clockEl = document.getElementById("live-clock");
-    if (clockEl) clockEl.textContent = `${h12}:${m}:${s} ${ampm}`;
-
     const dateEl = document.getElementById("live-date");
     if (dateEl) {
       const gregorianDate = gregorianFormatter.format(now);
@@ -189,7 +196,108 @@ import Footer from "../components/Footer.astro";
     }
   }
 
-  // ── URL helpers ─────────────────────────────────────────────────────────────
+  function getTomorrow(from: Date): Date {
+    return new Date(from.getFullYear(), from.getMonth(), from.getDate() + 1);
+  }
+
+  function formatPrayerTime(prayer: PrayerEntry): string {
+    const d = new Date(prayer.ts * 1000);
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${m} ${ampm}`;
+  }
+
+  function clearTomorrowFirstPrayer() {
+    tomorrowFirstPrayer = null;
+    tomorrowFirstPrayerKey = null;
+    tomorrowFirstPrayerRequestKey = null;
+  }
+
+  function renderNextPrayerCountdown(
+    prayer: PrayerEntry | null,
+    nowSec: number,
+  ) {
+    const labelEl = document.getElementById("next-prayer-label");
+    const countdownEl = document.getElementById("next-prayer-countdown");
+
+    if (!labelEl || !countdownEl) return;
+
+    if (!prayer) {
+      labelEl.textContent = "Memuat waktu solat";
+      countdownEl.textContent = "--:--:--";
+      return;
+    }
+
+    labelEl.textContent =
+      prayer === tomorrowFirstPrayer
+        ? `Sebelum masuk waktu ${prayer.name} (${formatPrayerTime(prayer)})`
+        : `Sebelum masuk waktu ${prayer.name}`;
+    countdownEl.textContent = formatCountdown(
+      getCountdownSeconds(prayer, nowSec),
+    );
+  }
+
+  async function ensureTomorrowFirstPrayer(now: Date) {
+    const tomorrow = getTomorrow(now);
+    const tomorrowKey = `${currentZone}-${getDayKey(tomorrow)}`;
+
+    if (tomorrowFirstPrayerKey === tomorrowKey && tomorrowFirstPrayer) return;
+    if (tomorrowFirstPrayerRequestKey === tomorrowKey) return;
+
+    tomorrowFirstPrayerRequestKey = tomorrowKey;
+    const zoneAtRequest = currentZone;
+    const dayKeyAtRequest = getDayKey(tomorrow);
+
+    try {
+      const data =
+        monthlyData?.zone === zoneAtRequest &&
+        monthlyData.year === tomorrow.getFullYear() &&
+        monthlyData.month_number === tomorrow.getMonth() + 1
+          ? monthlyData
+          : await fetchPrayerTimes(
+              zoneAtRequest,
+              tomorrow.getFullYear(),
+              tomorrow.getMonth() + 1,
+            );
+      const prayers = getPrayersForDay(data, tomorrow.getDate());
+      const firstPrayer = prayers[0] ?? null;
+
+      if (
+        currentZone !== zoneAtRequest ||
+        dayKeyAtRequest !== getDayKey(getTomorrow(new Date()))
+      ) {
+        return;
+      }
+
+      tomorrowFirstPrayer = firstPrayer;
+      tomorrowFirstPrayerKey = tomorrowKey;
+      updateNextPrayerCountdown();
+    } catch {
+      // Keep the loading state; the next interval will retry the lookup.
+    } finally {
+      if (tomorrowFirstPrayerRequestKey === tomorrowKey) {
+        tomorrowFirstPrayerRequestKey = null;
+      }
+    }
+  }
+
+  function updateNextPrayerCountdown() {
+    const now = new Date();
+    const nowSec = Math.floor(now.getTime() / 1000);
+    const nextPrayer = getNextPrayer(currentPrayers, nowSec);
+
+    if (nextPrayer) {
+      renderNextPrayerCountdown(nextPrayer, nowSec);
+      return;
+    }
+
+    renderNextPrayerCountdown(tomorrowFirstPrayer, nowSec);
+    void ensureTomorrowFirstPrayer(now);
+  }
+
+  // URL helpers
   function readURLParams() {
     const params = new URLSearchParams(window.location.search);
     const loc = params.get("location");
@@ -202,7 +310,7 @@ import Footer from "../components/Footer.astro";
     history.pushState({}, "", url);
   }
 
-  // ── Data fetching ────────────────────────────────────────────────────────────
+  // Data fetching
   async function loadData() {
     const today = new Date();
     const year = today.getFullYear();
@@ -223,6 +331,8 @@ import Footer from "../components/Footer.astro";
 
     const prayers = getPrayersForDay(monthlyData, day);
     const nowSec = Math.floor(Date.now() / 1000);
+    currentPrayers = prayers;
+    clearTomorrowFirstPrayer();
 
     window.dispatchEvent(
       new CustomEvent("prayerDataLoaded", {
@@ -237,10 +347,11 @@ import Footer from "../components/Footer.astro";
     );
 
     lastLoadedDayKey = getDayKey(today);
-    updateClock();
+    updateDate();
+    updateNextPrayerCountdown();
   }
 
-  // ── Geolocation ──────────────────────────────────────────────────────────────
+  // Geolocation
   function tryGeolocation(options: { fallbackToDefault?: boolean } = {}) {
     const fallbackToDefault = options.fallbackToDefault ?? true;
 
@@ -270,6 +381,8 @@ import Footer from "../components/Footer.astro";
           const day = today.getDate();
           const prayers = getPrayersForDay(gpsData, day);
           const nowSec = Math.floor(Date.now() / 1000);
+          currentPrayers = prayers;
+          clearTomorrowFirstPrayer();
           window.dispatchEvent(
             new CustomEvent("prayerDataLoaded", {
               detail: {
@@ -282,7 +395,8 @@ import Footer from "../components/Footer.astro";
             }),
           );
           lastLoadedDayKey = getDayKey(today);
-          updateClock();
+          updateDate();
+          updateNextPrayerCountdown();
           pushURL();
         } catch {
           if (fallbackToDefault) {
@@ -307,7 +421,7 @@ import Footer from "../components/Footer.astro";
     window.dispatchEvent(new CustomEvent("zoneResolved", { detail: { zone } }));
   }
 
-  // ── Zone selector ───────────────────────────────────────────────────────────
+  // Zone selector
   async function populateZones(selectedZone: string) {
     const select = document.getElementById(
       "zone-select",
@@ -362,7 +476,7 @@ import Footer from "../components/Footer.astro";
     display.textContent = selectedText;
   }
 
-  // ── Event handlers ───────────────────────────────────────────────────────────
+  // Event handlers
   document.getElementById("zone-select")?.addEventListener("change", (e) => {
     const zone = (e.target as HTMLSelectElement).value;
     updateZoneDisplay();
@@ -412,6 +526,9 @@ import Footer from "../components/Footer.astro";
     const { zone } = (e as CustomEvent).detail;
     currentZone = zone;
     monthlyData = null;
+    currentPrayers = [];
+    clearTomorrowFirstPrayer();
+    updateNextPrayerCountdown();
     pushURL();
     window.dispatchEvent(new CustomEvent("zoneResolved", { detail: { zone } }));
     await loadData();
@@ -433,9 +550,13 @@ import Footer from "../components/Footer.astro";
     void refreshIfDayChanged();
   });
 
-  // ── Bootstrap ────────────────────────────────────────────────────────────────
-  updateClock();
-  setInterval(updateClock, 1000);
+  // Bootstrap
+  updateDate();
+  updateNextPrayerCountdown();
+  setInterval(() => {
+    updateDate();
+    updateNextPrayerCountdown();
+  }, 1000);
   readURLParams();
   scheduleNextDayRollover();
 

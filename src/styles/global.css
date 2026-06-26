@@ -5,7 +5,7 @@
   --font-sans: "Nunito Sans Variable", "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ── Metro design tokens ── */
+/* Metro design */
 :root {
   /* accent like Windows 8 blue */
   --accent: #0078D4;
@@ -47,7 +47,6 @@
   --table-row-hover: rgba(92, 149, 191, 0.28);
 }
 
-/* ── Base ── */
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body {
@@ -95,14 +94,12 @@ html {
   color: var(--accent);
 }
 
-/* ── Inline zone selector under date ── */
 .zone-inline-wrap {
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .zone-picker {
   position: relative;
-  padding-right: 1.2rem;
 }
 
 .zone-display-text {
@@ -111,18 +108,13 @@ html {
   line-height: 1.35;
 }
 
-select.zone-overlay-select {
+select.zone-hidden-select {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 1px;
+  height: 1px;
   opacity: 0;
   appearance: none;
-  cursor: pointer;
-}
-
-.zone-picker:focus-within .zone-display-text {
-  color: var(--accent);
+  pointer-events: none;
 }
 
 .zone-actions {
@@ -147,7 +139,7 @@ select.zone-overlay-select {
   color: var(--accent);
 }
 
-/* ── Skeleton ── */
+/* Skeleton */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-secondary) 50%, var(--bg-card) 75%);
   background-size: 200% 100%;
@@ -158,7 +150,7 @@ select.zone-overlay-select {
   100% { background-position: -200% 0; }
 }
 
-/* ── Prayer tile like Metro live tile style ── */
+/* Prayer tile */
 .prayer-tile {
   display: flex;
   flex-direction: column;
@@ -178,12 +170,6 @@ select.zone-overlay-select {
   align-items: center;
   justify-content: flex-start;
   min-height: 7.4rem;
-}
-
-.prayer-tile-countdown {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 @media (max-width: 639px) {
@@ -213,28 +199,9 @@ select.zone-overlay-select {
     margin-top: 0.25rem !important;
   }
 
-  .prayer-tile-divider {
-    display: none !important;
-  }
-
-  .prayer-tile-countdown {
-    align-items: flex-end;
-    text-align: right;
-    margin-left: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  .prayer-countdown-label {
-    font-size: 0.56rem !important;
-  }
-
-  .prayer-countdown-time {
-    font-size: 1rem !important;
-    margin-top: 0.12rem !important;
-  }
 }
 
-  /* ── Monthly table row states ── */
+  /* Monthly timetable row */
   .month-row {
     border-bottom: 1px solid var(--border);
     transition: background-color 0.15s ease, outline-color 0.15s ease;
@@ -250,7 +217,7 @@ select.zone-overlay-select {
     outline: 1px solid var(--table-row-active);
   }
 
-/* ── Analog clock face ── */
+/* Analog clock face */
 .clock-face {
   fill: var(--bg-secondary);
   stroke: var(--border);

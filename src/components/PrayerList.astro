@@ -19,11 +19,6 @@
 
 <script>
   import type { PrayerEntry } from "../scripts/prayers";
-  import {
-    getNextPrayer,
-    getCountdownSeconds,
-    formatCountdown,
-  } from "../scripts/prayers";
 
   /** Convert #rrggbb to rgba(...) */
   function hexToRgba(hex: string, alpha: number): string {
@@ -33,6 +28,7 @@
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
+  // Build the prayer tiles and highlight the prayer that is active right now.
   function render(prayers: PrayerEntry[], nowSec: number) {
     const loading = document.getElementById("prayer-list-loading");
     const content = document.getElementById("prayer-list-content");
@@ -45,7 +41,6 @@
 
     for (const prayer of prayers) {
       const isActive = prayer.key === currentKey;
-      const isPast = prayer.ts < nowSec && !isActive;
 
       const tile = document.createElement("div");
       tile.className = `prayer-tile${isActive ? " prayer-tile-active" : ""}`;
@@ -57,12 +52,6 @@
       h = h % 12 || 12;
 
       if (isActive) {
-        const next = getNextPrayer(prayers, nowSec);
-        const countdown = next
-          ? formatCountdown(getCountdownSeconds(next, nowSec))
-          : "N/A";
-        const towardLabel = next ? `KE ${next.name.toUpperCase()}` : "SELESAI";
-
         tile.style.background = prayer.color;
         tile.style.color = "#ffffff";
         tile.innerHTML = `
@@ -71,16 +60,10 @@
             <span class="prayer-time" style="font-size:clamp(2rem,3.8vw,2.8rem);font-weight:300;line-height:1;letter-spacing:-0.02em;" class="tabular-nums">${h}:${m}</span>
             <span class="prayer-ampm" style="font-size:clamp(0.68rem,0.9vw,0.85rem);font-weight:700;letter-spacing:0.14em;margin-top:0.45rem;opacity:0.78;">${ampm}</span>
           </div>
-          <span class="prayer-tile-divider" style="display:block;width:100%;height:1px;background:rgba(255,255,255,0.25);margin:0.8rem 0 0.65rem;"></span>
-          <div class="prayer-tile-countdown">
-            <span id="active-prayer-next" class="prayer-countdown-label" style="font-size:0.6rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;opacity:0.82;">${towardLabel}</span>
-            <span id="active-prayer-countdown" class="prayer-countdown-time tabular-nums" style="font-size:clamp(1.05rem,1.5vw,1.35rem);font-weight:700;letter-spacing:0.03em;line-height:1.1;margin-top:0.25rem;">${countdown}</span>
-          </div>
         `;
       } else {
         // Tinted background, prayer color on the name
         tile.style.background = hexToRgba(prayer.color, 0.12);
-        if (isPast) tile.style.opacity = "0.4";
         tile.innerHTML = `
           <div class="prayer-tile-main">
             <span class="prayer-name" style="font-size:clamp(0.72rem,1.2vw,0.95rem);font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.6rem;color:${prayer.color};">${prayer.name}</span>
@@ -98,31 +81,17 @@
     content.classList.add("grid");
   }
 
-  function updateActiveCountdown(prayers: PrayerEntry[], nowSec: number) {
-    const countdownEl = document.getElementById("active-prayer-countdown");
-    const nextEl = document.getElementById("active-prayer-next");
-    if (!countdownEl || !nextEl) return;
-
-    const next = getNextPrayer(prayers, nowSec);
-    if (next) {
-      countdownEl.textContent = formatCountdown(
-        getCountdownSeconds(next, nowSec),
-      );
-      nextEl.textContent = `KE ${next.name.toUpperCase()}`;
-    } else {
-      countdownEl.textContent = "N/A";
-      nextEl.textContent = "SELESAI";
-    }
-  }
-
+  // Find the latest prayer that has already passed.
   function getActivePrayerKey(prayers: PrayerEntry[], nowSec: number) {
     const passed = prayers.filter((p) => p.ts <= nowSec);
     return passed.length > 0 ? passed[passed.length - 1].key : null;
   }
 
+  // Keep the latest prayer data so the active tile can update after initial load.
   let lastPrayers: PrayerEntry[] | null = null;
   let lastActiveKey: PrayerEntry["key"] | null = null;
 
+  // Wait for the shared prayer script to send today's prayer times.
   window.addEventListener("prayerDataLoaded", (e) => {
     const { prayers, nowSec } = (e as CustomEvent).detail;
     lastPrayers = prayers;
@@ -139,9 +108,6 @@
     if (activeKey !== lastActiveKey) {
       lastActiveKey = activeKey;
       render(lastPrayers, nowSec);
-      return;
     }
-
-    updateActiveCountdown(lastPrayers, nowSec);
   }, 1000);
 </script>
