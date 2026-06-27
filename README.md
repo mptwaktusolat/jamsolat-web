@@ -1,4 +1,7 @@
-<img width="2288" height="1285" alt="Github hero jamsolat" src="https://github.com/user-attachments/assets/7458c7c7-a7e0-462c-a7be-5c9ad95109e4" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/6afe9d7b-ed03-4891-929a-28920179457c">
+  <img alt="Screenshot JamSolat Light mode" src="https://github.com/user-attachments/assets/e9734061-7293-4586-83e9-cc5ab8b2b23b" />
+</picture>
 
 # JamSolat
 
