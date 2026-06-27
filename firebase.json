@@ -1,0 +1,12 @@
+{
+  "hosting": [
+    {
+      "target": "jamsolat-1",
+      "public": "dist"
+    },
+    {
+      "target": "jamsolat-2",
+      "public": "dist"
+    }
+  ]
+}

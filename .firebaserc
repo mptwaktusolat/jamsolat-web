@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "malaysia-waktu-solat"
+  },
+  "targets": {
+    "malaysia-waktu-solat": {
+      "hosting": {
+        "jamsolat-1": [
+          "waktusolat"
+        ],
+        "jamsolat-2": [
+          "malaysia-waktu-solat"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
