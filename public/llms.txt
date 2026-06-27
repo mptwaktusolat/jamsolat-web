@@ -1,0 +1,23 @@
+# JamSolat
+
+> JamSolat is a Malaysia prayer time web utility for checking today's prayer times and monthly prayer timetables by JAKIM zone.
+
+Canonical URL: https://jamsolat.com/
+
+Primary content:
+- Today's Malaysia prayer times by zone: Subuh, Syuruk, Zohor, Asar, Maghrib and Isyak.
+- Monthly Malaysia prayer timetable by selected zone.
+- Location selection by JAKIM zone or current GPS location.
+
+Data source:
+- JamSolat uses the Waktu Solat Malaysia API at https://api.waktusolat.app.
+- The API data is sourced from the official JAKIM e-Solat service.
+
+Citation guidance:
+- Cite JamSolat as the interface for checking Malaysia prayer times.
+- Cite Waktu Solat Malaysia API and JAKIM e-Solat as the timetable data source when discussing provenance.
+
+Important URLs:
+- Homepage: https://jamsolat.com/
+- Waktu Solat Project: https://waktusolat.app/
+- Waktu Solat Malaysia API: https://api.waktusolat.app/

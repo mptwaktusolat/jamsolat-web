@@ -20,7 +20,7 @@ import Footer from "../components/Footer.astro";
     >
       <div
         id="live-date"
-        class="mt-8 mb-12 text-(--text) font-bold text-lg sm:text-xl lg:text-5xl max-w-5xl"
+        class="mb-12 text-(--text) font-bold text-lg sm:text-xl lg:text-5xl max-w-5xl"
       >
         N/A
       </div>
@@ -73,11 +73,11 @@ import Footer from "../components/Footer.astro";
 
     <!-- Row 2: Prayer tiles -->
     <section class="px-6 py-10 lg:py-5 lg:mt-auto">
-      <div
+      <h2
         class="text-xs font-semibold uppercase tracking-[0.25em] text-(--text-muted) mb-6 lg:mb-4"
       >
         Waktu Solat Hari Ini
-      </div>
+      </h2>
       <PrayerList />
 
       <a
@@ -95,6 +95,7 @@ import Footer from "../components/Footer.astro";
     id="monthly-timetable"
     class="max-w-7xl mx-auto px-6 py-8 border-t border-(--border)"
   >
+    <h2 class="sr-only">Jadual waktu solat bulanan Malaysia</h2>
     <MonthlyPrayerTable />
   </section>
 
