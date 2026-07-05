@@ -1,3 +1,7 @@
+---
+import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
+---
+
 <section id="prayer-list" aria-label="Prayer times">
   <!-- skeleton tiles while loading -->
   <div id="prayer-list-loading" class="grid grid-cols-1 sm:grid-cols-6 gap-1">
@@ -13,67 +17,55 @@
   </div>
 
   <div id="prayer-list-content" class="hidden grid-cols-1 sm:grid-cols-6 gap-1">
-    <!-- populated by JS -->
+    {
+      PRAYER_KEYS.map((key) => (
+        <div class="prayer-tile" data-prayer-key={key}>
+          <div class="prayer-tile-main">
+            <span class="prayer-name">{PRAYER_NAMES[key]}</span>
+            <span class="prayer-time tabular-nums"></span>
+            <span class="prayer-ampm"></span>
+          </div>
+        </div>
+      ))
+    }
   </div>
 </section>
 
 <script>
   import type { PrayerEntry } from "../scripts/prayers";
 
-  /** Convert #rrggbb to rgba(...) */
-  function hexToRgba(hex: string, alpha: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  function formatPrayerTime(ts: number) {
+    const d = new Date(ts * 1000);
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, "0");
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return { time: `${h}:${m}`, ampm };
   }
 
-  // Build the prayer tiles and highlight the prayer that is active right now.
+  // Fill prayer tiles and highlight the prayer that is active right now.
   function render(prayers: PrayerEntry[], nowSec: number) {
     const loading = document.getElementById("prayer-list-loading");
     const content = document.getElementById("prayer-list-content");
     if (!loading || !content) return;
 
-    const passed = prayers.filter((p) => p.ts <= nowSec);
-    const currentKey = passed.length > 0 ? passed[passed.length - 1].key : null;
-
-    content.innerHTML = "";
+    const currentKey = getActivePrayerKey(prayers, nowSec);
 
     for (const prayer of prayers) {
       const isActive = prayer.key === currentKey;
+      const tile = content.querySelector<HTMLElement>(
+        `[data-prayer-key="${prayer.key}"]`,
+      );
+      if (!tile) continue;
 
-      const tile = document.createElement("div");
-      tile.className = `prayer-tile${isActive ? " prayer-tile-active" : ""}`;
+      const timeEl = tile.querySelector(".prayer-time");
+      const ampmEl = tile.querySelector(".prayer-ampm");
+      if (!timeEl || !ampmEl) continue;
 
-      const d = new Date(prayer.ts * 1000);
-      let h = d.getHours();
-      const m = String(d.getMinutes()).padStart(2, "0");
-      const ampm = h >= 12 ? "PM" : "AM";
-      h = h % 12 || 12;
-
-      if (isActive) {
-        tile.style.background = prayer.color;
-        tile.style.color = "#ffffff";
-        tile.innerHTML = `
-          <div class="prayer-tile-main">
-            <span class="prayer-name" style="font-size:clamp(0.72rem,1.2vw,0.95rem);font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.6rem;opacity:0.88;">${prayer.name}</span>
-            <span class="prayer-time" style="font-size:clamp(2rem,3.8vw,2.8rem);font-weight:300;line-height:1;letter-spacing:-0.02em;" class="tabular-nums">${h}:${m}</span>
-            <span class="prayer-ampm" style="font-size:clamp(0.68rem,0.9vw,0.85rem);font-weight:700;letter-spacing:0.14em;margin-top:0.45rem;opacity:0.78;">${ampm}</span>
-          </div>
-        `;
-      } else {
-        // Tinted background, prayer color on the name
-        tile.style.background = hexToRgba(prayer.color, 0.12);
-        tile.innerHTML = `
-          <div class="prayer-tile-main">
-            <span class="prayer-name" style="font-size:clamp(0.72rem,1.2vw,0.95rem);font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:0.6rem;color:${prayer.color};">${prayer.name}</span>
-            <span class="prayer-time" style="font-size:clamp(2rem,3.8vw,2.8rem);font-weight:300;line-height:1;letter-spacing:-0.02em;" class="tabular-nums">${h}:${m}</span>
-            <span class="prayer-ampm" style="font-size:clamp(0.68rem,0.9vw,0.85rem);font-weight:700;letter-spacing:0.14em;margin-top:0.45rem;opacity:0.55;">${ampm}</span>
-          </div>
-        `;
-      }
-
-      content.appendChild(tile);
+      const { time, ampm } = formatPrayerTime(prayer.ts);
+      tile.classList.toggle("prayer-tile-active", isActive);
+      timeEl.textContent = time;
+      ampmEl.textContent = ampm;
     }
 
     loading.classList.add("hidden");

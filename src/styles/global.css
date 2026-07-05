@@ -168,12 +168,17 @@ select.zone-hidden-select {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 0.45rem;
   min-height: 172px;
-  /* background & color set per-prayer by JS */
+  padding: 1.5rem 0.45rem;
+  background: #1BA1E21f;
   transition: background-color 0.2s, color 0.2s;
   cursor: default;
   user-select: none;
+}
+
+.prayer-tile-active {
+  background: #1BA1E2;
+  color: #ffffff;
 }
 
 .prayer-tile-main {
@@ -182,6 +187,39 @@ select.zone-hidden-select {
   align-items: center;
   justify-content: flex-start;
   min-height: 7.4rem;
+}
+
+.prayer-name {
+  margin-bottom: 0.6rem;
+  color: #1BA1E2;
+  font-size: clamp(0.72rem, 1.2vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.prayer-tile-active .prayer-name {
+  color: inherit;
+  opacity: 0.88;
+}
+
+.prayer-time {
+  font-size: clamp(2rem, 3.8vw, 2.8rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.prayer-ampm {
+  margin-top: 0.45rem;
+  font-size: clamp(0.68rem, 0.9vw, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  opacity: 0.55;
+}
+
+.prayer-tile-active .prayer-ampm {
+  opacity: 0.78;
 }
 
 @media (max-width: 639px) {
@@ -200,34 +238,33 @@ select.zone-hidden-select {
   }
 
   .prayer-name {
-    margin-bottom: 0.3rem !important;
+    margin-bottom: 0.3rem;
   }
 
   .prayer-time {
-    font-size: clamp(1.45rem, 8vw, 1.95rem) !important;
+    font-size: clamp(1.45rem, 8vw, 1.95rem);
   }
 
   .prayer-ampm {
-    margin-top: 0.25rem !important;
+    margin-top: 0.25rem;
   }
-
 }
 
-  /* Monthly timetable row */
-  .month-row {
-    border-bottom: 1px solid var(--border);
-    transition: background-color 0.15s ease, outline-color 0.15s ease;
-  }
+/* Monthly timetable row */
+.month-row {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease, outline-color 0.15s ease;
+}
 
-  .month-row:hover {
-    background: var(--table-row-hover);
-  }
+.month-row:hover {
+  background: var(--table-row-hover);
+}
 
-  .month-row-active,
-  .month-row-active:hover {
-    background: var(--table-row-active);
-    outline: 1px solid var(--table-row-active);
-  }
+.month-row-active,
+.month-row-active:hover {
+  background: var(--table-row-active);
+  outline: 1px solid var(--table-row-active);
+}
 
 /* Analog clock face */
 .clock-face {
