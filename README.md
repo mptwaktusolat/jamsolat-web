@@ -22,3 +22,9 @@ docker compose -f compose.debug.yaml up
 ## API
 
 JamSolat uses Waktu Solat Malaysia API: https://api.waktusolat.app. The data is sourced from the official JAKIM e-Solat page.
+
+## Deployment
+
+The canonical deployment is at https://jamsolat.com (deployed on GitHub Pages).
+
+I also deployed to Firebase at https://waktusolat.web.app and https://malaysia-waktu-solat.web.app because I had spare domains from previous deployments that are no longer in use.
