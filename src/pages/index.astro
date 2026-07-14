@@ -111,6 +111,7 @@ import Footer from "../components/Footer.astro";
   import { formatHijriDate } from "../scripts/hijri";
   import {
     formatCountdown,
+    getCountdownColor,
     getCountdownSeconds,
     getNextPrayer,
     getPrayersForDay,
@@ -228,6 +229,7 @@ import Footer from "../components/Footer.astro";
     if (!prayer) {
       labelEl.textContent = "Memuat waktu solat";
       countdownEl.textContent = "--:--:--";
+      countdownEl.style.color = "";
       return;
     }
 
@@ -235,9 +237,9 @@ import Footer from "../components/Footer.astro";
       prayer === tomorrowFirstPrayer
         ? `Sebelum masuk waktu ${prayer.name} (${formatPrayerTime(prayer)})`
         : `Sebelum masuk waktu ${prayer.name}`;
-    countdownEl.textContent = formatCountdown(
-      getCountdownSeconds(prayer, nowSec),
-    );
+    const secondsLeft = getCountdownSeconds(prayer, nowSec);
+    countdownEl.textContent = formatCountdown(secondsLeft);
+    countdownEl.style.color = getCountdownColor(secondsLeft);
   }
 
   async function ensureTomorrowFirstPrayer(now: Date) {

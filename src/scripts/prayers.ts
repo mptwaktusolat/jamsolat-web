@@ -77,6 +77,13 @@ export function formatCountdown(totalSec: number): string {
   return `${mm}:${ss}`;
 }
 
+/** Get the timer color based on the prayer urgency */
+export function getCountdownColor(totalSec: number): string {
+  if (totalSec <= 9 * 60) return "#dc2626";
+  if (totalSec <= 15 * 60) return "#f97316";
+  return "";
+}
+
 /** Compute the angle (degrees, from 12 o'clock) for a given time on a 12-hr clock face. */
 export function timeToClockAngle(tsSec: number): number {
   const d = new Date(tsSec * 1000);
