@@ -83,11 +83,3 @@ export function getCountdownColor(totalSec: number): string {
   if (totalSec <= 15 * 60) return "#f97316";
   return "";
 }
-
-/** Compute the angle (degrees, from 12 o'clock) for a given time on a 12-hr clock face. */
-export function timeToClockAngle(tsSec: number): number {
-  const d = new Date(tsSec * 1000);
-  const h = d.getHours() % 12;
-  const m = d.getMinutes();
-  return (h / 12) * 360 + (m / 60) * 30;
-}

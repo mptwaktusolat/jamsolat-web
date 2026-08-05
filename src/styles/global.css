@@ -265,12 +265,3 @@ select.zone-hidden-select {
   background: var(--table-row-active);
   outline: 1px solid var(--table-row-active);
 }
-
-/* Analog clock face */
-.clock-face {
-  fill: var(--bg-secondary);
-  stroke: var(--border);
-  stroke-width: 2;
-}
-.clock-tick       { stroke: var(--text-muted); }
-.clock-tick-major { stroke: var(--text); stroke-width: 2; }
