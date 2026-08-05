@@ -19,20 +19,10 @@ export const PRAYER_NAMES: Record<PrayerKey, string> = {
   isha: "Isyak",
 };
 
-export const PRAYER_COLORS: Record<PrayerKey, string> = {
-  fajr: "#0078D4",
-  syuruk: "#DA3B01",
-  dhuhr: "#038387",
-  asr: "#744DA9",
-  maghrib: "#C50F1F",
-  isha: "#5C2D91",
-};
-
 export interface PrayerEntry {
   key: PrayerKey;
   name: string;
   ts: number; // Unix seconds
-  color: string;
 }
 
 export function getPrayersForDay(
@@ -45,7 +35,6 @@ export function getPrayersForDay(
     key,
     name: PRAYER_NAMES[key],
     ts: dayData[key],
-    color: PRAYER_COLORS[key],
   }));
 }
 
@@ -58,6 +47,30 @@ export function getNextPrayer(
   return upcoming.length > 0 ? upcoming[0] : null;
 }
 
+/** Return the latest prayer whose time has already passed. */
+export function getCurrentPrayer(
+  prayers: PrayerEntry[],
+  nowSec: number,
+): PrayerEntry | null {
+  const passed = prayers.filter((p) => p.ts <= nowSec);
+  return passed.length > 0 ? passed[passed.length - 1] : null;
+}
+
+/**
+ * Get prayer time remaining as a percentage of the span
+ */
+export function getPrayerTimeRemaining(
+  prevTs: number | null,
+  nextTs: number | null,
+  nowSec: number,
+): number {
+  if (nextTs === null) return 0;
+  const startTs = prevTs ?? nextTs - 3 * 3600;
+  const span = nextTs - startTs;
+  if (span <= 0) return 0;
+  return Math.min(100, Math.max(0, ((nextTs - nowSec) / span) * 100));
+}
+
 /** Seconds remaining until nextPrayer. */
 export function getCountdownSeconds(
   nextPrayer: PrayerEntry,
@@ -66,15 +79,14 @@ export function getCountdownSeconds(
   return Math.max(0, nextPrayer.ts - nowSec);
 }
 
-/** Format seconds as MM:SS when < 1hr, or HH:MM:SS. */
-export function formatCountdown(totalSec: number): string {
+/** Format countdown to sentence. Eg "1 jam 12 minit 05 saat" */
+export function formatCountdownLong(totalSec: number): string {
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
-  const mm = String(m).padStart(2, "0");
-  const ss = String(s).padStart(2, "0");
-  if (h > 0) return `${h}:${mm}:${ss}`;
-  return `${mm}:${ss}`;
+  const parts = h > 0 ? [`${h} jam`] : [];
+  parts.push(`${m} minit`, `${String(s).padStart(2, "0")} saat`);
+  return parts.join(" ");
 }
 
 /** Get the timer color based on the prayer urgency */

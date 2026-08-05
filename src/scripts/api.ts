@@ -66,6 +66,17 @@ export async function fetchPrayerTimesByGPS(
   return normalized;
 }
 
+export async function fetchMonthlyTimetablePDF(
+  zone: string,
+  year: number,
+  month: number,
+): Promise<Blob> {
+  const url = `${BASE}/jadual_solat/${encodeURIComponent(zone)}?year=${year}&month=${month}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`PDF API error ${res.status} for zone ${zone}`);
+  return res.blob();
+}
+
 export async function fetchAllZones(): Promise<ZoneInfo[]> {
   const cacheKey = "jsolat-zones";
   const cached = getCached<ZoneInfo[]>(cacheKey);

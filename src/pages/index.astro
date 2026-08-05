@@ -3,10 +3,11 @@ import Layout from "../layouts/Layout.astro";
 import PrayerList from "../components/PrayerList.astro";
 import MonthlyPrayerTable from "../components/MonthlyPrayerTable.astro";
 import Footer from "../components/Footer.astro";
+import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
 ---
 
 <Layout>
-  <main class="max-w-7xl mx-auto flex flex-col lg:h-screen">
+  <main>
     <!-- Error state -->
     <div
       id="page-error"
@@ -14,90 +15,93 @@ import Footer from "../components/Footer.astro";
     >
     </div>
 
-    <!-- Next prayer countdown -->
-    <section
-      class="px-6 py-10 lg:py-5 flex-1 flex flex-col items-center justify-center text-center"
-    >
-      <div
-        id="live-date"
-        class="mb-12 text-(--text) font-bold text-lg sm:text-xl lg:text-5xl max-w-5xl"
-      >
-        N/A
-      </div>
+    <h1 class="sr-only">Waktu solat Malaysia hari ini mengikut zon JAKIM</h1>
 
-      <div class="flex flex-col items-center" aria-live="polite">
-        <div
-          id="next-prayer-countdown"
-          class="font-light tabular-nums leading-none text-(--accent) text-center text-[clamp(4rem,15vw,9.25rem)] xl:text-[clamp(4.75rem,12vw,10.75rem)] 2xl:text-[clamp(5rem,10vw,11.75rem)] tracking-[0.04em]"
-          aria-label="Countdown to next prayer"
-        >
-          --:--:--
-        </div>
-        <div
-          id="next-prayer-label"
-          class="mt-6 text-(--text) text-base sm:text-xl lg:text-4xl font-semibold"
-        >
-          Memuat waktu solat
-        </div>
-      </div>
-
-      <div
-        class="zone-inline-wrap max-w-5xl mt-12 w-full flex flex-col items-center"
-      >
-        <div class="zone-picker">
-          <div
-            id="zone-display"
-            class="zone-display-text text-xs sm:text-sm lg:text-lg xl:text-xl font-semibold tracking-[0.08em]"
-          >
-            Memuat zon...
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="flex justify-end">
+          <div class="loc-pill">
+            <button
+              type="button"
+              id="change-location"
+              class="loc-zone"
+              aria-label="Tukar zon solat"
+            >
+              <span id="zone-display">Memuat zon...</span>
+              <ChevronDown size={14} class="loc-caret" aria-hidden="true" />
+            </button>
+            <span class="loc-divider" aria-hidden="true"></span>
+            <button
+              type="button"
+              id="use-current-location"
+              class="loc-gps"
+              title="Guna lokasi semasa"
+              aria-label="Guna lokasi semasa"
+            >
+              <LocateFixed size={15} aria-hidden="true" />
+            </button>
+            <select
+              id="zone-select"
+              class="zone-hidden-select"
+              aria-label="Pilih zon solat"
+              tabindex="-1"
+            >
+              <option value="">Memuat zon...</option>
+            </select>
           </div>
-          <select
-            id="zone-select"
-            class="zone-hidden-select"
-            aria-label="Select prayer zone"
-          >
-            <option value="">Memuat zon...</option>
-          </select>
         </div>
 
-        <div class="zone-actions justify-center">
-          <a href="#" id="change-location" class="zone-action-link">
-            Change location
-          </a>
-          <a href="#" id="use-current-location" class="zone-action-link">
-            Use current location
-          </a>
+        <!-- Next prayer -->
+        <div class="hero-main">
+          <div>
+            <div class="hero-next-line" aria-live="polite">
+              <span id="next-prayer-name" class="hero-next-name">&mdash;</span>
+              <span id="next-prayer-time" class="hero-next-time">--:--</span>
+            </div>
+            <div id="next-prayer-countdown" class="hero-countdown">
+              Memuat waktu solat&hellip;
+            </div>
+          </div>
+
+          <div class="hero-date">
+            <div id="live-date" class="hero-date-greg">N/A</div>
+            <div id="live-hijri" class="hero-date-hijri"></div>
+          </div>
+        </div>
+
+        <!-- Today at a glance -->
+        <div>
+          <div
+            class="hero-progress"
+            role="progressbar"
+            aria-label="Baki masa sebelum waktu solat seterusnya"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            id="hero-progress"
+          >
+            <div id="hero-progress-fill" class="hero-progress-fill"></div>
+          </div>
+
+          <h2 class="sr-only">Waktu solat hari ini</h2>
+          <PrayerList />
+
+          <div class="hero-foot">
+            <a href="#monthly-timetable" class="hero-foot-link">
+              <ArrowDown size={14} aria-hidden="true" />
+              Lihat jadual sebulan di bawah
+            </a>
+            <span id="hero-status" class="hero-foot-status"></span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Row 2: Prayer tiles -->
-    <section class="px-6 py-10 lg:py-5 lg:mt-auto">
-      <h2
-        class="text-xs font-semibold uppercase tracking-[0.25em] text-(--text-muted) mb-6 lg:mb-4"
-      >
-        Waktu Solat Hari Ini
-      </h2>
-      <PrayerList />
-
-      <a
-        href="#monthly-timetable"
-        class="mt-8 mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-(--text-muted) hover:text-(--accent) transition-colors"
-        aria-label="Lihat jadual waktu solat sebulan di bawah"
-      >
-        <span aria-hidden="true">↓</span>
-        Lihat Jadual Sebulan Di Bawah
-      </a>
+    <section id="monthly-timetable" class="max-w-7xl mx-auto px-6 py-8">
+      <h2 class="sr-only">Jadual waktu solat bulanan Malaysia</h2>
+      <MonthlyPrayerTable />
     </section>
   </main>
-
-  <section
-    id="monthly-timetable"
-    class="max-w-7xl mx-auto px-6 py-8 border-t border-(--border)"
-  >
-    <h2 class="sr-only">Jadual waktu solat bulanan Malaysia</h2>
-    <MonthlyPrayerTable />
-  </section>
 
   <Footer />
 </Layout>
@@ -110,10 +114,12 @@ import Footer from "../components/Footer.astro";
   } from "../scripts/api";
   import { formatHijriDate } from "../scripts/hijri";
   import {
-    formatCountdown,
+    formatCountdownLong,
     getCountdownColor,
     getCountdownSeconds,
+    getCurrentPrayer,
     getNextPrayer,
+    getPrayerTimeRemaining,
     getPrayersForDay,
   } from "../scripts/prayers";
   import type { V2Response, ZoneInfo } from "../scripts/api";
@@ -130,8 +136,16 @@ import Footer from "../components/Footer.astro";
   let tomorrowFirstPrayer: PrayerEntry | null = null;
   let tomorrowFirstPrayerKey: string | null = null;
   let tomorrowFirstPrayerRequestKey: string | null = null;
+  let tomorrowFirstPrayerFailures = 0;
+  let tomorrowFirstPrayerRetryAt = 0;
 
-  const gregorianFormatter = new Intl.DateTimeFormat("en-GB", {
+  // The lookup for tomorrow runs off the one-second countdown tick, so a failed
+  // attempt has to back off — otherwise a network blip after Isyak turns into
+  // one request per second for the rest of the night.
+  const TOMORROW_RETRY_BASE_MS = 5_000;
+  const TOMORROW_RETRY_MAX_MS = 5 * 60_000;
+
+  const gregorianFormatter = new Intl.DateTimeFormat("ms-MY", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -186,16 +200,27 @@ import Footer from "../components/Footer.astro";
   function updateDate() {
     const now = new Date();
     const dateEl = document.getElementById("live-date");
-    if (dateEl) {
-      const gregorianDate = gregorianFormatter.format(now);
+    const hijriEl = document.getElementById("live-hijri");
+    if (dateEl) dateEl.textContent = gregorianFormatter.format(now);
+
+    if (hijriEl) {
       const hijriDate = getHijriDate(now);
-      dateEl.textContent = hijriDate
-        ? `${gregorianDate} · ${formatHijriDate(hijriDate, {
-            padDay: false,
-            yearSuffix: "H",
-          })}`
-        : gregorianDate;
+      hijriEl.textContent = hijriDate
+        ? formatHijriDate(hijriDate, { padDay: false, yearSuffix: "H" })
+        : "";
     }
+  }
+
+  function setStatus(text: string) {
+    const el = document.getElementById("hero-status");
+    if (el) el.textContent = text;
+  }
+
+  function format24(tsSec: number): string {
+    const d = new Date(tsSec * 1000);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(
+      d.getMinutes(),
+    ).padStart(2, "0")}`;
   }
 
   function getTomorrow(from: Date): Date {
@@ -215,39 +240,70 @@ import Footer from "../components/Footer.astro";
     tomorrowFirstPrayer = null;
     tomorrowFirstPrayerKey = null;
     tomorrowFirstPrayerRequestKey = null;
+    tomorrowFirstPrayerFailures = 0;
+    tomorrowFirstPrayerRetryAt = 0;
   }
 
-  function renderNextPrayerCountdown(
-    prayer: PrayerEntry | null,
-    nowSec: number,
-  ) {
-    const labelEl = document.getElementById("next-prayer-label");
+  function scheduleTomorrowRetry() {
+    tomorrowFirstPrayerFailures += 1;
+    const delay = Math.min(
+      TOMORROW_RETRY_MAX_MS,
+      TOMORROW_RETRY_BASE_MS * 2 ** (tomorrowFirstPrayerFailures - 1),
+    );
+    tomorrowFirstPrayerRetryAt = Date.now() + delay;
+  }
+
+  // An empty colour falls back to the accent defined in the stylesheet.
+  function renderProgress(percent: number, color = "") {
+    const track = document.getElementById("hero-progress");
+    const fill = document.getElementById("hero-progress-fill");
+    if (!track || !fill) return;
+    fill.style.width = `${percent.toFixed(1)}%`;
+    fill.style.backgroundColor = color;
+    track.setAttribute("aria-valuenow", String(Math.round(percent)));
+  }
+
+  function renderNextPrayer(prayer: PrayerEntry | null, nowSec: number) {
+    const nameEl = document.getElementById("next-prayer-name");
+    const timeEl = document.getElementById("next-prayer-time");
     const countdownEl = document.getElementById("next-prayer-countdown");
 
-    if (!labelEl || !countdownEl) return;
+    if (!nameEl || !timeEl || !countdownEl) return;
 
     if (!prayer) {
-      labelEl.textContent = "Memuat waktu solat";
-      countdownEl.textContent = "--:--:--";
+      nameEl.textContent = "—";
+      timeEl.textContent = "--:--";
+      countdownEl.textContent = "Memuat waktu solat…";
       countdownEl.style.color = "";
+      renderProgress(0);
       return;
     }
 
-    labelEl.textContent =
-      prayer === tomorrowFirstPrayer
-        ? `Sebelum masuk waktu ${prayer.name} (${formatPrayerTime(prayer)})`
-        : `Sebelum masuk waktu ${prayer.name}`;
+    const isTomorrow = prayer === tomorrowFirstPrayer;
     const secondsLeft = getCountdownSeconds(prayer, nowSec);
-    countdownEl.textContent = formatCountdown(secondsLeft);
-    countdownEl.style.color = getCountdownColor(secondsLeft);
+    const urgencyColor = getCountdownColor(secondsLeft);
+
+    nameEl.textContent = prayer.name;
+    timeEl.textContent = formatPrayerTime(prayer);
+    countdownEl.textContent = isTomorrow
+      ? `dalam ${formatCountdownLong(secondsLeft)} · esok`
+      : `dalam ${formatCountdownLong(secondsLeft)}`;
+    countdownEl.style.color = urgencyColor;
+
+    const prevPrayer = getCurrentPrayer(currentPrayers, nowSec);
+    renderProgress(
+      getPrayerTimeRemaining(prevPrayer?.ts ?? null, prayer.ts, nowSec),
+      urgencyColor,
+    );
   }
 
   async function ensureTomorrowFirstPrayer(now: Date) {
     const tomorrow = getTomorrow(now);
     const tomorrowKey = `${currentZone}-${getDayKey(tomorrow)}`;
 
-    if (tomorrowFirstPrayerKey === tomorrowKey && tomorrowFirstPrayer) return;
+    if (tomorrowFirstPrayerKey === tomorrowKey) return;
     if (tomorrowFirstPrayerRequestKey === tomorrowKey) return;
+    if (Date.now() < tomorrowFirstPrayerRetryAt) return;
 
     tomorrowFirstPrayerRequestKey = tomorrowKey;
     const zoneAtRequest = currentZone;
@@ -274,11 +330,19 @@ import Footer from "../components/Footer.astro";
         return;
       }
 
+      if (!firstPrayer) {
+        scheduleTomorrowRetry();
+        return;
+      }
+
       tomorrowFirstPrayer = firstPrayer;
       tomorrowFirstPrayerKey = tomorrowKey;
+      tomorrowFirstPrayerFailures = 0;
+      tomorrowFirstPrayerRetryAt = 0;
       updateNextPrayerCountdown();
     } catch {
-      // Keep the loading state; the next interval will retry the lookup.
+      // Keep the loading state; the backoff decides when to retry.
+      scheduleTomorrowRetry();
     } finally {
       if (tomorrowFirstPrayerRequestKey === tomorrowKey) {
         tomorrowFirstPrayerRequestKey = null;
@@ -292,11 +356,11 @@ import Footer from "../components/Footer.astro";
     const nextPrayer = getNextPrayer(currentPrayers, nowSec);
 
     if (nextPrayer) {
-      renderNextPrayerCountdown(nextPrayer, nowSec);
+      renderNextPrayer(nextPrayer, nowSec);
       return;
     }
 
-    renderNextPrayerCountdown(tomorrowFirstPrayer, nowSec);
+    renderNextPrayer(tomorrowFirstPrayer, nowSec);
     void ensureTomorrowFirstPrayer(now);
   }
 
@@ -313,50 +377,57 @@ import Footer from "../components/Footer.astro";
     history.pushState({}, "", url);
   }
 
+  // Publish freshly loaded data to the prayer grid and the monthly table.
+  function publishPrayerData(data: V2Response, today: Date) {
+    const day = today.getDate();
+    const prayers = getPrayersForDay(data, day);
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    currentPrayers = prayers;
+    clearTomorrowFirstPrayer();
+
+    window.dispatchEvent(
+      new CustomEvent("prayerDataLoaded", {
+        detail: { prayers, nowSec, zone: currentZone, monthly: data, day },
+      }),
+    );
+
+    lastLoadedDayKey = getDayKey(today);
+    const imsak = data.prayers.find((p) => p.day === day)?.imsak;
+    setStatus(imsak ? `Imsak ${format24(imsak)}` : "");
+    updateDate();
+    updateNextPrayerCountdown();
+  }
+
   // Data fetching
   async function loadData() {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
+    setStatus("Memuat data JAKIM…");
 
     try {
-      monthlyData = await fetchPrayerTimes(currentZone, year, month);
-    } catch (err) {
+      monthlyData = await fetchPrayerTimes(
+        currentZone,
+        today.getFullYear(),
+        today.getMonth() + 1,
+      );
+    } catch {
       const errEl = document.getElementById("page-error");
       if (errEl) {
         errEl.textContent =
           "Gagal memuat waktu solat. Sila semak sambungan internet anda.";
         errEl.classList.remove("hidden");
       }
+      setStatus("Gagal muat data JAKIM");
       return;
     }
 
-    const prayers = getPrayersForDay(monthlyData, day);
-    const nowSec = Math.floor(Date.now() / 1000);
-    currentPrayers = prayers;
-    clearTomorrowFirstPrayer();
-
-    window.dispatchEvent(
-      new CustomEvent("prayerDataLoaded", {
-        detail: {
-          prayers,
-          nowSec,
-          zone: currentZone,
-          monthly: monthlyData,
-          day,
-        },
-      }),
-    );
-
-    lastLoadedDayKey = getDayKey(today);
-    updateDate();
-    updateNextPrayerCountdown();
+    publishPrayerData(monthlyData, today);
   }
 
   // Geolocation
   function tryGeolocation(options: { fallbackToDefault?: boolean } = {}) {
     const fallbackToDefault = options.fallbackToDefault ?? true;
+    const gpsButton = document.getElementById("use-current-location");
 
     if (!("geolocation" in navigator)) {
       if (fallbackToDefault) {
@@ -365,51 +436,36 @@ import Footer from "../components/Footer.astro";
       }
       return;
     }
+
+    gpsButton?.setAttribute("data-active", "true");
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         try {
           const today = new Date();
-          const year = today.getFullYear();
-          const month = today.getMonth() + 1;
           const gpsData = await fetchPrayerTimesByGPS(
             latitude,
             longitude,
-            year,
-            month,
+            today.getFullYear(),
+            today.getMonth() + 1,
           );
           currentZone = gpsData.zone;
           monthlyData = gpsData;
           resolveZone(currentZone);
-          const day = today.getDate();
-          const prayers = getPrayersForDay(gpsData, day);
-          const nowSec = Math.floor(Date.now() / 1000);
-          currentPrayers = prayers;
-          clearTomorrowFirstPrayer();
-          window.dispatchEvent(
-            new CustomEvent("prayerDataLoaded", {
-              detail: {
-                prayers,
-                nowSec,
-                zone: currentZone,
-                monthly: gpsData,
-                day,
-              },
-            }),
-          );
-          lastLoadedDayKey = getDayKey(today);
-          updateDate();
-          updateNextPrayerCountdown();
+          publishPrayerData(gpsData, today);
           pushURL();
         } catch {
           if (fallbackToDefault) {
             resolveZone(DEFAULT_ZONE);
             await loadData();
           }
+        } finally {
+          gpsButton?.removeAttribute("data-active");
         }
       },
       () => {
         // Permission denied or error
+        gpsButton?.removeAttribute("data-active");
         if (fallbackToDefault) {
           resolveZone(DEFAULT_ZONE);
           void loadData();
@@ -472,11 +528,10 @@ import Footer from "../components/Footer.astro";
     const display = document.getElementById("zone-display");
     if (!select || !display) return;
 
-    const selectedText =
+    display.textContent =
       select.selectedOptions[0]?.textContent?.trim() ||
       select.value ||
       "Pilih zon";
-    display.textContent = selectedText;
   }
 
   // Event handlers
@@ -486,8 +541,7 @@ import Footer from "../components/Footer.astro";
     window.dispatchEvent(new CustomEvent("zoneChanged", { detail: { zone } }));
   });
 
-  document.getElementById("change-location")?.addEventListener("click", (e) => {
-    e.preventDefault();
+  document.getElementById("change-location")?.addEventListener("click", () => {
     const select = document.getElementById(
       "zone-select",
     ) as HTMLSelectElement | null;
@@ -508,8 +562,7 @@ import Footer from "../components/Footer.astro";
 
   document
     .getElementById("use-current-location")
-    ?.addEventListener("click", (e) => {
-      e.preventDefault();
+    ?.addEventListener("click", () => {
       tryGeolocation({ fallbackToDefault: false });
     });
 

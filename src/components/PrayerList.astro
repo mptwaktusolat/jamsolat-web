@@ -2,29 +2,25 @@
 import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
 ---
 
-<section id="prayer-list" aria-label="Prayer times">
-  <!-- skeleton tiles while loading -->
-  <div id="prayer-list-loading" class="grid grid-cols-1 sm:grid-cols-6 gap-1">
+<section id="prayer-list" aria-label="Waktu solat hari ini">
+  <!-- skeleton cells while loading -->
+  <div id="prayer-list-loading" class="prayer-grid">
     {
       Array.from({ length: 6 }).map(() => (
-        <div class="prayer-tile">
-          <div class="skeleton h-3 w-14 mb-3" />
-          <div class="skeleton h-10 w-20" />
-          <div class="skeleton h-2.5 w-8 mt-2" />
+        <div class="prayer-cell">
+          <div class="skeleton h-3 w-12 mb-2.5" />
+          <div class="skeleton h-6 w-16" />
         </div>
       ))
     }
   </div>
 
-  <div id="prayer-list-content" class="hidden grid-cols-1 sm:grid-cols-6 gap-1">
+  <div id="prayer-list-content" class="prayer-grid" hidden>
     {
       PRAYER_KEYS.map((key) => (
-        <div class="prayer-tile" data-prayer-key={key}>
-          <div class="prayer-tile-main">
-            <span class="prayer-name">{PRAYER_NAMES[key]}</span>
-            <span class="prayer-time tabular-nums"></span>
-            <span class="prayer-ampm"></span>
-          </div>
+        <div class="prayer-cell" data-prayer-key={key}>
+          <span class="prayer-name">{PRAYER_NAMES[key]}</span>
+          <span class="prayer-time tabular-nums">--:--</span>
         </div>
       ))
     }
@@ -32,6 +28,7 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
 </section>
 
 <script>
+  import { getNextPrayer } from "../scripts/prayers";
   import type { PrayerEntry } from "../scripts/prayers";
 
   function formatPrayerTime(ts: number) {
@@ -40,65 +37,58 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
     const m = String(d.getMinutes()).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
     h = h % 12 || 12;
-    return { time: `${h}:${m}`, ampm };
+    return `${h}:${m} ${ampm}`;
   }
 
-  // Fill prayer tiles and highlight the prayer that is active right now.
+  // Fill the cells and mark the prayer that is up next.
   function render(prayers: PrayerEntry[], nowSec: number) {
     const loading = document.getElementById("prayer-list-loading");
     const content = document.getElementById("prayer-list-content");
     if (!loading || !content) return;
 
-    const currentKey = getActivePrayerKey(prayers, nowSec);
+    const nextKey = getNextPrayer(prayers, nowSec)?.key ?? null;
 
     for (const prayer of prayers) {
-      const isActive = prayer.key === currentKey;
-      const tile = content.querySelector<HTMLElement>(
+      const cell = content.querySelector<HTMLElement>(
         `[data-prayer-key="${prayer.key}"]`,
       );
-      if (!tile) continue;
+      const timeEl = cell?.querySelector(".prayer-time");
+      if (!cell || !timeEl) continue;
 
-      const timeEl = tile.querySelector(".prayer-time");
-      const ampmEl = tile.querySelector(".prayer-ampm");
-      if (!timeEl || !ampmEl) continue;
-
-      const { time, ampm } = formatPrayerTime(prayer.ts);
-      tile.classList.toggle("prayer-tile-active", isActive);
-      timeEl.textContent = time;
-      ampmEl.textContent = ampm;
+      timeEl.textContent = formatPrayerTime(prayer.ts);
+      // Syuruk is not a prayer, so it stays quiet unless it is up next.
+      cell.dataset.state =
+        prayer.key === nextKey
+          ? "next"
+          : prayer.key === "syuruk"
+            ? "muted"
+            : "default";
     }
 
-    loading.classList.add("hidden");
-    content.classList.remove("hidden");
-    content.classList.add("grid");
+    loading.hidden = true;
+    content.hidden = false;
   }
 
-  // Find the latest prayer that has already passed.
-  function getActivePrayerKey(prayers: PrayerEntry[], nowSec: number) {
-    const passed = prayers.filter((p) => p.ts <= nowSec);
-    return passed.length > 0 ? passed[passed.length - 1].key : null;
-  }
-
-  // Keep the latest prayer data so the active tile can update after initial load.
+  // Keep the latest prayer data so the highlight can move after initial load.
   let lastPrayers: PrayerEntry[] | null = null;
-  let lastActiveKey: PrayerEntry["key"] | null = null;
+  let lastNextKey: PrayerEntry["key"] | null = null;
 
   // Wait for the shared prayer script to send today's prayer times.
   window.addEventListener("prayerDataLoaded", (e) => {
     const { prayers, nowSec } = (e as CustomEvent).detail;
     lastPrayers = prayers;
-    lastActiveKey = getActivePrayerKey(prayers, nowSec);
+    lastNextKey = getNextPrayer(prayers, nowSec)?.key ?? null;
     render(prayers, nowSec);
   });
 
-  // Re-check active prayer every second so tiles flip exactly on prayer boundary.
+  // Re-check every second so the highlight flips exactly on the prayer boundary.
   setInterval(() => {
     if (!lastPrayers) return;
 
     const nowSec = Math.floor(Date.now() / 1000);
-    const activeKey = getActivePrayerKey(lastPrayers, nowSec);
-    if (activeKey !== lastActiveKey) {
-      lastActiveKey = activeKey;
+    const nextKey = getNextPrayer(lastPrayers, nowSec)?.key ?? null;
+    if (nextKey !== lastNextKey) {
+      lastNextKey = nextKey;
       render(lastPrayers, nowSec);
     }
   }, 1000);

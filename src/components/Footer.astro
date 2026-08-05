@@ -2,24 +2,22 @@
 import { Clock7, Sun, Moon, Monitor } from "@lucide/astro";
 ---
 
-<footer class="border-t border-(--border) bg-(--bg)">
+<footer class="bg-canvas">
   <div
     class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
   >
     <div class="flex items-center gap-3 min-w-0">
-      <div
-        class="w-8 h-8 bg-(--accent) flex items-center justify-center shrink-0"
-      >
+      <div class="w-8 h-8 bg-accent flex items-center justify-center shrink-0">
         <Clock7 size={16} class="text-white" />
       </div>
-      <p class="text-sm text-(--text-muted) leading-snug">
-        <span class="font-semibold text-(--text)">JamSolat</span>
+      <p class="text-sm text-ink-muted leading-snug">
+        <span class="font-semibold text-ink">JamSolat</span>
         {" "}by{" "}
         <a
           href="https://waktusolat.app"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-(--accent) hover:underline"
+          class="text-accent hover:underline"
         >
           Waktu Solat Project
         </a>

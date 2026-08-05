@@ -1,71 +1,76 @@
-<section id="monthly-prayer-table" aria-label="Waktu solat sebulan">
-  <div
-    class="text-xs font-semibold uppercase tracking-[0.25em] text-(--text-muted) mb-3"
-  >
-    Jadual Waktu Solat Sebulan
-  </div>
-  <div id="month-table-meta" class="text-sm text-(--text-muted) mb-4">
-    Memuat data bulan semasa...
+---
+import { ChevronLeft, ChevronRight, Download } from "@lucide/astro";
+
+const COLUMNS = [
+  "Tarikh",
+  "Hijri",
+  "Imsak",
+  "Subuh",
+  "Syuruk",
+  "Dhuha",
+  "Zohor",
+  "Asar",
+  "Maghrib",
+  "Isyak",
+];
+---
+
+<section
+  id="monthly-prayer-table"
+  class="card"
+  aria-label="Jadual waktu solat sebulan"
+>
+  <div class="card-head">
+    <div>
+      <div class="card-title">Jadual waktu solat sebulan</div>
+    </div>
+
+    <div class="card-actions">
+      <button type="button" id="month-prev" class="pill-btn">
+        <ChevronLeft size={14} aria-hidden="true" />
+        Sebelum
+      </button>
+      <span id="month-current-label" class="pill-label">—</span>
+      <button type="button" id="month-next" class="pill-btn">
+        Seterusnya
+        <ChevronRight size={14} aria-hidden="true" />
+      </button>
+      <button type="button" id="month-print" class="pill-btn">
+        <Download size={14} aria-hidden="true" />
+        <span id="month-print-label">PDF</span>
+      </button>
+    </div>
   </div>
 
-  <div id="month-table-loading" class="space-y-2">
+  <div
+    id="month-table-error"
+    class="hidden px-6 py-4 text-sm text-red-600"
+    role="status"
+  >
+  </div>
+
+  <div id="month-table-loading" class="p-6 space-y-2">
     <div class="skeleton h-9 w-full"></div>
     <div class="skeleton h-9 w-full"></div>
     <div class="skeleton h-9 w-full"></div>
     <div class="skeleton h-9 w-full"></div>
   </div>
 
-  <div
-    id="month-table-wrap"
-    class="hidden overflow-x-auto border border-(--border)"
-  >
+  <div id="month-table-wrap" class="hidden overflow-x-auto">
     <table class="w-full min-w-275 table-fixed border-collapse text-sm">
       <thead>
-        <tr class="bg-(--bg-secondary)">
+        <tr class="bg-surface-soft text-ink-muted">
           <th
-            class="w-14 text-left align-middle px-3 py-2.5 border-b border-(--border) font-semibold whitespace-nowrap"
+            class="w-14 text-left align-middle px-3 py-2.5 font-medium whitespace-nowrap"
             >No.</th
           >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Date</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Hijri</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Imsak</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Subuh</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Syuruk</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Dhuha</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Zohor</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Asar</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Maghrib</th
-          >
-          <th
-            class="text-center align-middle px-3 py-2.5 border-b border-(--border) font-semibold"
-            >Isyak</th
-          >
+          {
+            COLUMNS.map((label) => (
+              <th class="text-center align-middle px-3 py-2.5 font-medium">
+                {label}
+              </th>
+            ))
+          }
         </tr>
       </thead>
       <tbody id="month-table-body"></tbody>
@@ -74,8 +79,29 @@
 </section>
 
 <script>
-  import type { V2Response } from "../scripts/api";
+  import {
+    fetchPrayerTimes,
+    fetchMonthlyTimetablePDF,
+    type V2Response,
+  } from "../scripts/api";
   import { formatHijriDate } from "../scripts/hijri";
+
+  const TIME_KEYS = [
+    "imsak",
+    "fajr",
+    "syuruk",
+    "dhuha",
+    "dhuhr",
+    "asr",
+    "maghrib",
+    "isha",
+  ] as const;
+
+  // The month currently on screen — the arrows page away from today's month.
+  let zone: string | null = null;
+  let viewYear = 0;
+  let viewMonth = 0;
+  let requestId = 0;
 
   function format24(tsSec: number): string {
     const d = new Date(tsSec * 1000);
@@ -93,36 +119,53 @@
         year: "2-digit",
       })
       .replace(/\s+/g, "-");
-    const shortDay = date.toLocaleDateString("en-GB", {
-      weekday: "short",
-    });
+    const shortDay = date.toLocaleDateString("en-GB", { weekday: "short" });
     return `${shortDate} (${shortDay})`;
   }
 
+  function highlightDay(year: number, month: number): number {
+    const now = new Date();
+    return now.getFullYear() === year && now.getMonth() + 1 === month
+      ? now.getDate()
+      : -1;
+  }
+
+  function setNavDisabled(disabled: boolean) {
+    for (const id of ["month-prev", "month-next"]) {
+      const btn = document.getElementById(id) as HTMLButtonElement | null;
+      if (btn) btn.disabled = disabled;
+    }
+  }
+
+  function showError(message: string) {
+    const errEl = document.getElementById("month-table-error");
+    if (!errEl) return;
+    errEl.textContent = message;
+    errEl.classList.toggle("hidden", message === "");
+  }
+
   function renderMonthTable(monthly: V2Response, currentDay: number) {
-    const metaEl = document.getElementById("month-table-meta");
+    const labelEl = document.getElementById("month-current-label");
     const body = document.getElementById("month-table-body");
     const loading = document.getElementById("month-table-loading");
     const wrap = document.getElementById("month-table-wrap");
 
-    if (!metaEl || !body || !loading || !wrap) return;
+    if (!labelEl || !body || !loading || !wrap) return;
 
-    metaEl.textContent = `${monthly.zone} • ${monthly.month} ${monthly.year}`;
+    showError("");
+    labelEl.textContent = `${monthly.month} ${monthly.year}`;
     body.innerHTML = "";
 
     for (const p of monthly.prayers) {
       const row = document.createElement("tr");
       row.className = "month-row";
-
-      if (p.day === currentDay) {
-        row.classList.add("month-row-active");
-        row.classList.add("font-bold");
-      }
+      if (p.day === currentDay) row.classList.add("month-row-active");
 
       const dayCell = document.createElement("td");
       dayCell.className =
-        "w-14 text-left align-middle px-3 py-2.5 font-semibold whitespace-nowrap";
+        "w-14 text-left align-middle px-3 py-2.5 text-ink-muted whitespace-nowrap";
       dayCell.textContent = String(p.day);
+      row.appendChild(dayCell);
 
       const dateCell = document.createElement("td");
       dateCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
@@ -131,71 +174,116 @@
         monthly.month_number,
         monthly.year,
       );
+      row.appendChild(dateCell);
 
       const hijriCell = document.createElement("td");
       hijriCell.className = "text-center align-middle px-3 py-2.5";
       hijriCell.textContent = formatHijriDate(p.hijri, "short");
-
-      const imsakCell = document.createElement("td");
-      imsakCell.className =
-        "text-center align-middle px-3 py-2.5 tabular-nums";
-      imsakCell.textContent = format24(p.imsak);
-
-      const fajrCell = document.createElement("td");
-      fajrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
-      fajrCell.textContent = format24(p.fajr);
-
-      const syurukCell = document.createElement("td");
-      syurukCell.className =
-        "text-center align-middle px-3 py-2.5 tabular-nums";
-      syurukCell.textContent = format24(p.syuruk);
-
-      const dhuhaCell = document.createElement("td");
-      dhuhaCell.className =
-        "text-center align-middle px-3 py-2.5 tabular-nums";
-      dhuhaCell.textContent = format24(p.dhuha);
-
-      const dhuhrCell = document.createElement("td");
-      dhuhrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
-      dhuhrCell.textContent = format24(p.dhuhr);
-
-      const asrCell = document.createElement("td");
-      asrCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
-      asrCell.textContent = format24(p.asr);
-
-      const maghribCell = document.createElement("td");
-      maghribCell.className =
-        "text-center align-middle px-3 py-2.5 tabular-nums";
-      maghribCell.textContent = format24(p.maghrib);
-
-      const ishaCell = document.createElement("td");
-      ishaCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
-      ishaCell.textContent = format24(p.isha);
-
-      row.appendChild(dayCell);
-      row.appendChild(dateCell);
       row.appendChild(hijriCell);
-      row.appendChild(imsakCell);
-      row.appendChild(fajrCell);
-      row.appendChild(syurukCell);
-      row.appendChild(dhuhaCell);
-      row.appendChild(dhuhrCell);
-      row.appendChild(asrCell);
-      row.appendChild(maghribCell);
-      row.appendChild(ishaCell);
+
+      for (const key of TIME_KEYS) {
+        const cell = document.createElement("td");
+        cell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
+        cell.textContent = format24(p[key]);
+        row.appendChild(cell);
+      }
+
       body.appendChild(row);
     }
 
     loading.classList.add("hidden");
     wrap.classList.remove("hidden");
+    setNavDisabled(false);
   }
 
+  async function showMonth(year: number, month: number) {
+    if (!zone) return;
+
+    const id = ++requestId;
+    setNavDisabled(true);
+
+    let data: V2Response;
+    try {
+      data = await fetchPrayerTimes(zone, year, month);
+    } catch {
+      if (id !== requestId) return;
+      showError("Gagal memuat jadual bulan ini. Sila cuba lagi.");
+      setNavDisabled(false);
+      return;
+    }
+
+    if (id !== requestId) return;
+    viewYear = year;
+    viewMonth = month;
+    renderMonthTable(data, highlightDay(year, month));
+  }
+
+  function shiftMonth(offset: number) {
+    let month = viewMonth + offset;
+    let year = viewYear;
+    if (month < 1) {
+      month = 12;
+      year -= 1;
+    } else if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+    void showMonth(year, month);
+  }
+
+  document
+    .getElementById("month-prev")
+    ?.addEventListener("click", () => shiftMonth(-1));
+  document
+    .getElementById("month-next")
+    ?.addEventListener("click", () => shiftMonth(1));
+  async function downloadMonthlyPDF() {
+    if (!zone) return;
+
+    const btn = document.getElementById(
+      "month-print",
+    ) as HTMLButtonElement | null;
+    const label = document.getElementById("month-print-label");
+    if (!btn || !label) return;
+
+    const originalLabel = label.textContent;
+    btn.disabled = true;
+    label.textContent = "Memuat turun…";
+
+    try {
+      const blob = await fetchMonthlyTimetablePDF(zone, viewYear, viewMonth);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `jadual-solat-${zone}-${viewYear}-${String(viewMonth).padStart(2, "0")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      showError("Gagal memuat turun PDF. Sila cuba lagi.");
+    } finally {
+      btn.disabled = false;
+      label.textContent = originalLabel;
+    }
+  }
+
+  document
+    .getElementById("month-print")
+    ?.addEventListener("click", () => void downloadMonthlyPDF());
+
+  // A fresh load (or a zone change) always snaps the table back to today.
   window.addEventListener("prayerDataLoaded", (e) => {
     const { monthly, day } = (e as CustomEvent).detail as {
       monthly?: V2Response;
       day?: number;
     };
     if (!monthly || !day) return;
+
+    requestId++;
+    zone = monthly.zone;
+    viewYear = monthly.year;
+    viewMonth = monthly.month_number;
     renderMonthTable(monthly, day);
   });
 </script>
