@@ -216,19 +216,12 @@ import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
     if (el) el.textContent = text;
   }
 
-  function format24(tsSec: number): string {
-    const d = new Date(tsSec * 1000);
-    return `${String(d.getHours()).padStart(2, "0")}:${String(
-      d.getMinutes(),
-    ).padStart(2, "0")}`;
-  }
-
   function getTomorrow(from: Date): Date {
     return new Date(from.getFullYear(), from.getMonth(), from.getDate() + 1);
   }
 
-  function formatPrayerTime(prayer: PrayerEntry): string {
-    const d = new Date(prayer.ts * 1000);
+  function formatPrayerTime(tsSec: number): string {
+    const d = new Date(tsSec * 1000);
     let h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, "0");
     const ampm = h >= 12 ? "PM" : "AM";
@@ -284,7 +277,7 @@ import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
     const urgencyColor = getCountdownColor(secondsLeft);
 
     nameEl.textContent = prayer.name;
-    timeEl.textContent = formatPrayerTime(prayer);
+    timeEl.textContent = formatPrayerTime(prayer.ts);
     countdownEl.textContent = isTomorrow
       ? `dalam ${formatCountdownLong(secondsLeft)} · esok`
       : `dalam ${formatCountdownLong(secondsLeft)}`;
@@ -393,8 +386,12 @@ import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
     );
 
     lastLoadedDayKey = getDayKey(today);
-    const imsak = data.prayers.find((p) => p.day === day)?.imsak;
-    setStatus(imsak ? `Imsak ${format24(imsak)}` : "");
+    const dayData = data.prayers.find((p) => p.day === day);
+    setStatus(
+      dayData
+        ? `Imsak ${formatPrayerTime(dayData.imsak)} · Dhuha ${formatPrayerTime(dayData.dhuha)}`
+        : "",
+    );
     updateDate();
     updateNextPrayerCountdown();
   }
