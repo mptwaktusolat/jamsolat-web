@@ -431,8 +431,8 @@ select.zone-hidden-select {
   color: var(--text-muted);
 }
 
-.prayer-cell[data-state="next"] .prayer-name,
-.prayer-cell[data-state="next"] .prayer-time {
+.prayer-cell[data-state="current"] .prayer-name,
+.prayer-cell[data-state="current"] .prayer-time {
   color: var(--accent);
   font-weight: 700;
 }

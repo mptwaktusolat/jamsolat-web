@@ -28,7 +28,7 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
 </section>
 
 <script>
-  import { getNextPrayer } from "../scripts/prayers";
+  import { getCurrentPrayer } from "../scripts/prayers";
   import type { PrayerEntry } from "../scripts/prayers";
 
   function formatPrayerTime(ts: number) {
@@ -40,13 +40,13 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
     return `${h}:${m} ${ampm}`;
   }
 
-  // Fill the cells and mark the prayer that is up next.
+  // Fill the cells and mark the prayer that is currently in effect.
   function render(prayers: PrayerEntry[], nowSec: number) {
     const loading = document.getElementById("prayer-list-loading");
     const content = document.getElementById("prayer-list-content");
     if (!loading || !content) return;
 
-    const nextKey = getNextPrayer(prayers, nowSec)?.key ?? null;
+    const currentKey = getCurrentPrayer(prayers, nowSec)?.key ?? null;
 
     for (const prayer of prayers) {
       const cell = content.querySelector<HTMLElement>(
@@ -56,10 +56,10 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
       if (!cell || !timeEl) continue;
 
       timeEl.textContent = formatPrayerTime(prayer.ts);
-      // Syuruk is not a prayer, so it stays quiet unless it is up next.
+      // Syuruk is not a prayer, so it stays quiet unless it is currently active.
       cell.dataset.state =
-        prayer.key === nextKey
-          ? "next"
+        prayer.key === currentKey
+          ? "current"
           : prayer.key === "syuruk"
             ? "muted"
             : "default";
@@ -71,13 +71,13 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
 
   // Keep the latest prayer data so the highlight can move after initial load.
   let lastPrayers: PrayerEntry[] | null = null;
-  let lastNextKey: PrayerEntry["key"] | null = null;
+  let lastCurrentKey: PrayerEntry["key"] | null = null;
 
   // Wait for the shared prayer script to send today's prayer times.
   window.addEventListener("prayerDataLoaded", (e) => {
     const { prayers, nowSec } = (e as CustomEvent).detail;
     lastPrayers = prayers;
-    lastNextKey = getNextPrayer(prayers, nowSec)?.key ?? null;
+    lastCurrentKey = getCurrentPrayer(prayers, nowSec)?.key ?? null;
     render(prayers, nowSec);
   });
 
@@ -86,9 +86,9 @@ import { PRAYER_KEYS, PRAYER_NAMES } from "../scripts/prayers";
     if (!lastPrayers) return;
 
     const nowSec = Math.floor(Date.now() / 1000);
-    const nextKey = getNextPrayer(lastPrayers, nowSec)?.key ?? null;
-    if (nextKey !== lastNextKey) {
-      lastNextKey = nextKey;
+    const currentKey = getCurrentPrayer(lastPrayers, nowSec)?.key ?? null;
+    if (currentKey !== lastCurrentKey) {
+      lastCurrentKey = currentKey;
       render(lastPrayers, nowSec);
     }
   }, 1000);
