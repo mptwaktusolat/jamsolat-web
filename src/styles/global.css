@@ -16,6 +16,8 @@
 }
 
 :root {
+  color-scheme: light;
+
   --accent: #038387;
 
   /* surfaces */
@@ -39,6 +41,8 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
+
   --accent: #2EC5C9;
 
   --bg: #18181b;
@@ -244,6 +248,7 @@ html {
 }
 
 select.zone-hidden-select {
+  color-scheme: light dark;
   position: absolute;
   left: 1rem;
   bottom: 0;
@@ -252,6 +257,16 @@ select.zone-hidden-select {
   opacity: 0;
   appearance: none;
   pointer-events: none;
+}
+
+select.zone-hidden-select option,
+select.zone-hidden-select optgroup {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+select.zone-hidden-select optgroup {
+  color: var(--text-secondary);
 }
 
 /* Next prayer */
