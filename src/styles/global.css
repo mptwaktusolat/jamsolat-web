@@ -41,20 +41,20 @@
 [data-theme="dark"] {
   --accent: #2EC5C9;
 
-  --bg: #0c1114;
-  --surface: #131b22;
-  --bg-secondary: #182129;
-  --bg-card: #1b262e;
+  --bg: #18181b;
+  --surface: #1f1f23;
+  --bg-secondary: #212125;
+  --bg-card: #252529;
 
-  --text: #f2f7f9;
-  --text-secondary: #9fb0bd;
-  --text-muted: #7d8b98;
+  --text: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 
-  --border: #22303a;
-  --border-soft: #1b262e;
+  --border: #2e2e33;
+  --border-soft: #26262b;
 
   --table-row-active: rgba(46, 197, 201, 0.16);
-  --table-row-hover: rgba(159, 176, 189, 0.08);
+  --table-row-hover: rgba(161, 161, 170, 0.08);
 }
 
 html, body {
