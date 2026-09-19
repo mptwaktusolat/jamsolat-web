@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/6afe9d7b-ed03-4891-929a-28920179457c">
-  <img alt="Screenshot JamSolat Light mode" src="https://github.com/user-attachments/assets/e9734061-7293-4586-83e9-cc5ab8b2b23b" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/66842dec-4ed1-4ad5-8280-0403cce3235f">
+  <img alt="Screenshot JamSolat Light mode" src="https://github.com/user-attachments/assets/d25a549a-d65c-48a7-a686-0fd673d74491" />
 </picture>
 
 # JamSolat
