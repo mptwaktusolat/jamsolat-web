@@ -2,7 +2,6 @@
 import { ChevronLeft, ChevronRight, Download } from "@lucide/astro";
 
 const COLUMNS = [
-  "Tarikh",
   "Hijri",
   "Imsak",
   "Subuh",
@@ -61,8 +60,12 @@ const COLUMNS = [
       <thead>
         <tr class="bg-surface-soft text-ink-muted">
           <th
-            class="w-14 text-left align-middle px-3 py-2.5 font-medium whitespace-nowrap"
-            >No.</th
+            class="w-32 text-center align-middle px-3 py-2.5 font-medium whitespace-nowrap"
+            >Tarikh</th
+          >
+          <th
+            class="w-16 text-center align-middle px-3 py-2.5 font-medium whitespace-nowrap"
+            >Hari</th
           >
           {
             COLUMNS.map((label) => (
@@ -110,17 +113,18 @@ const COLUMNS = [
     return `${h}:${m}`;
   }
 
-  function formatShortDateWithDay(day: number, month: number, year: number) {
+  function formatShortDate(day: number, month: number, year: number) {
     const date = new Date(year, month - 1, day);
-    const shortDate = date
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      })
-      .replace(/\s+/g, "-");
-    const shortDay = date.toLocaleDateString("en-GB", { weekday: "short" });
-    return `${shortDate} (${shortDay})`;
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    });
+  }
+
+  function formatShortDay(day: number, month: number, year: number) {
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString("en-GB", { weekday: "short" });
   }
 
   function highlightDay(year: number, month: number): number {
@@ -161,20 +165,23 @@ const COLUMNS = [
       row.className = "month-row";
       if (p.day === currentDay) row.classList.add("month-row-active");
 
-      const dayCell = document.createElement("td");
-      dayCell.className =
-        "w-14 text-left align-middle px-3 py-2.5 text-ink-muted whitespace-nowrap";
-      dayCell.textContent = String(p.day);
-      row.appendChild(dayCell);
-
       const dateCell = document.createElement("td");
       dateCell.className = "text-center align-middle px-3 py-2.5 tabular-nums";
-      dateCell.textContent = formatShortDateWithDay(
+      dateCell.textContent = formatShortDate(
         p.day,
         monthly.month_number,
         monthly.year,
       );
       row.appendChild(dateCell);
+
+      const weekdayCell = document.createElement("td");
+      weekdayCell.className = "w-16 text-center align-middle px-3 py-2.5";
+      weekdayCell.textContent = formatShortDay(
+        p.day,
+        monthly.month_number,
+        monthly.year,
+      );
+      row.appendChild(weekdayCell);
 
       const hijriCell = document.createElement("td");
       hijriCell.className = "text-center align-middle px-3 py-2.5";
