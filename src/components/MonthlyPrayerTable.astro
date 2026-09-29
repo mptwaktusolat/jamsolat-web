@@ -25,13 +25,24 @@ const COLUMNS = [
     </div>
 
     <div class="card-actions">
-      <button type="button" id="month-prev" class="pill-btn">
+      <button
+        type="button"
+        id="month-prev"
+        class="pill-btn pill-btn-icon"
+        aria-label="Bulan sebelumnya"
+      >
         <ChevronLeft size={14} aria-hidden="true" />
-        Sebelum
       </button>
-      <span id="month-current-label" class="pill-label">—</span>
-      <button type="button" id="month-next" class="pill-btn">
-        Seterusnya
+      <span class="pill-label">
+        <span id="month-current-short">—</span>
+        <span id="month-current-full" class="pill-label-full">—</span>
+      </span>
+      <button
+        type="button"
+        id="month-next"
+        class="pill-btn pill-btn-icon"
+        aria-label="Bulan seterusnya"
+      >
         <ChevronRight size={14} aria-hidden="true" />
       </button>
       <button type="button" id="month-print" class="pill-btn">
@@ -149,15 +160,20 @@ const COLUMNS = [
   }
 
   function renderMonthTable(monthly: V2Response, currentDay: number) {
-    const labelEl = document.getElementById("month-current-label");
+    const shortLabelEl = document.getElementById("month-current-short");
+    const fullLabelEl = document.getElementById("month-current-full");
     const body = document.getElementById("month-table-body");
     const loading = document.getElementById("month-table-loading");
     const wrap = document.getElementById("month-table-wrap");
 
-    if (!labelEl || !body || !loading || !wrap) return;
+    if (!shortLabelEl || !fullLabelEl || !body || !loading || !wrap) return;
 
     showError("");
-    labelEl.textContent = `${monthly.month} ${monthly.year}`;
+    shortLabelEl.textContent = `${monthly.month} ${monthly.year}`;
+    fullLabelEl.textContent = new Intl.DateTimeFormat("ms-MY", {
+      month: "long",
+      year: "numeric",
+    }).format(new Date(monthly.year, monthly.month_number - 1));
     body.innerHTML = "";
 
     for (const p of monthly.prayers) {
