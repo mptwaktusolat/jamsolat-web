@@ -70,6 +70,16 @@ const structuredData = [
     <meta name="twitter:image" content={imageUrl} />
     <meta name="generator" content={Astro.generator} />
     <script
+      is:inline
+      defer
+      src="https://umami.iqfareez.com/analitik.js"
+      data-website-id="da7562c3-7e29-4ff0-9512-6bd81d070767"></script>
+    <script
+      is:inline
+      defer
+      src="https://umami.iqfareez.com/recorder.js"
+      data-website-id="da7562c3-7e29-4ff0-9512-6bd81d070767"></script>
+    <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
     />
