@@ -85,7 +85,8 @@ export function formatCountdownLong(totalSec: number): string {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
   const parts = h > 0 ? [`${h} jam`] : [];
-  parts.push(`${m} minit`, `${String(s).padStart(2, "0")} saat`);
+  if (m > 0) parts.push(`${m} minit`);
+  if (s > 0) parts.push(`${String(s).padStart(2, "0")} saat`);
   return parts.join(" ");
 }
 
