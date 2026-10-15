@@ -13,18 +13,20 @@ JamSolat is a site to view Malaysia daily prayer times, built with [Astro](https
 2. Install dependencies with `pnpm install`
 3. Start dev server with `pnpm run dev`
 
-Or quickly run with Docker compose:
-
-```bash
-docker compose -f compose.debug.yaml up
-```
-
 ## API
 
 JamSolat uses Waktu Solat Malaysia API: https://api.waktusolat.app. The data is sourced from the official JAKIM e-Solat page.
 
 ## Deployment
 
+Open http://localhost:54329.
+
 The canonical deployment is at https://jamsolat.com (deployed on GitHub Pages).
 
 I also deployed to Firebase at https://waktusolat.web.app and https://malaysia-waktu-solat.web.app because I had spare domains from previous projects that were not active. I would have released these domains if I could, but unfortunately, Firebase [doesn't allow](https://stackoverflow.com/questions/64901714/how-long-does-it-take-for-a-firebase-hosting-url-to-be-available-again-after-it) it.
+
+Want to self host? Run the site with Docker:
+
+```bash
+docker run -d --restart unless-stopped -p 54329:54329 ghcr.io/mptwaktusolat/jamsolat-web:main
+```
