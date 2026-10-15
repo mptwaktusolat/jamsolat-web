@@ -148,9 +148,9 @@ html {
 /* Large desktop */
 @media (min-width: 1280px) {
   .hero {
-    --hero-next-size: clamp(4.5rem, 7vw, 6.5rem);
+    --hero-next-size: clamp(4rem, 5vw, 5.5rem);
     --hero-countdown-size: 1.625rem;
-    --hero-date-size: 1.75rem;
+    --hero-date-size: 1.5rem;
     --hero-hijri-size: 1.25rem;
     --hero-meta-size: 0.9375rem;
     --hero-progress-height: 6px;
@@ -160,13 +160,13 @@ html {
   }
 }
 
-/* Mosque display / TV — legible from a distance */
+/* Wide desktop / TV */
 @media (min-width: 1600px) {
   .hero {
-    --hero-next-size: clamp(6rem, 7vw, 9rem);
-    --hero-countdown-size: 2.125rem;
-    --hero-date-size: 2.375rem;
-    --hero-hijri-size: 1.5rem;
+    --hero-next-size: clamp(5rem, 5.25vw, 6.5rem);
+    --hero-countdown-size: 1.75rem;
+    --hero-date-size: 2rem;
+    --hero-hijri-size: 1.25rem;
     --hero-meta-size: 1.0625rem;
     --hero-progress-height: 8px;
     --prayer-name-size: 1.3125rem;
