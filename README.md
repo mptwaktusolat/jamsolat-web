@@ -27,4 +27,4 @@ JamSolat uses Waktu Solat Malaysia API: https://api.waktusolat.app. The data is 
 
 The canonical deployment is at https://jamsolat.com (deployed on GitHub Pages).
 
-I also deployed to Firebase at https://waktusolat.web.app and https://malaysia-waktu-solat.web.app because I had spare domains from previous deployments that are no longer in use.
+I also deployed to Firebase at https://waktusolat.web.app and https://malaysia-waktu-solat.web.app because I had spare domains from previous projects that were not active. I would have released these domains if I could, but unfortunately, Firebase [doesn't allow](https://stackoverflow.com/questions/64901714/how-long-does-it-take-for-a-firebase-hosting-url-to-be-available-again-after-it) it.
