@@ -120,9 +120,15 @@ html {
   border-bottom: 1px solid var(--border);
 }
 
-.hero-inner {
+.hero-inner,
+.monthly-timetable,
+.footer-inner {
   max-width: 80rem;
   margin: 0 auto;
+  padding-inline: 1.5rem;
+}
+
+.hero-inner {
   padding: 1.75rem 1.5rem 2rem;
   display: flex;
   flex-direction: column;
@@ -137,6 +143,11 @@ html {
 }
 
 @media (min-width: 1024px) {
+  .monthly-timetable,
+  .footer-inner {
+    padding-inline: 2.75rem;
+  }
+
   .hero-inner {
     min-height: 100vh;
     padding: 2.75rem 2.75rem 2.5rem;
@@ -174,8 +185,14 @@ html {
     --prayer-gap: 1.25rem;
   }
 
-  .hero-inner {
+  .hero-inner,
+  .monthly-timetable,
+  .footer-inner {
     max-width: 96rem;
+    padding-inline: 3.5rem;
+  }
+
+  .hero-inner {
     padding: 3.5rem 3.5rem 3rem;
   }
 }
@@ -566,6 +583,17 @@ select.zone-hidden-select optgroup {
 }
 
 /* Monthly table */
+
+.monthly-timetable {
+  padding-block: 2rem;
+}
+
+@media (max-width: 639px) {
+  .monthly-timetable,
+  .footer-inner {
+    padding-inline: 0;
+  }
+}
 
 .month-row {
   border-top: 1px solid var(--border-soft);
