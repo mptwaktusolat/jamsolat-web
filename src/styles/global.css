@@ -613,25 +613,146 @@ select.zone-hidden-select optgroup {
 
 /* Print */
 
+.month-print-brand,
+.month-print-period,
+.month-print-zone {
+  display: none;
+}
+
+@page {
+  size: auto;
+  margin: 10mm;
+}
+
 @media print {
+  :root,
+  [data-theme="dark"] {
+    color-scheme: light;
+    --accent: #038387;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --bg-secondary: #fafbfc;
+    --text: #131b22;
+    --text-secondary: #5a6672;
+    --text-muted: #5a6672;
+    --border: #e8ecf1;
+    --border-soft: #eef1f5;
+  }
+
+  html,
+  body {
+    min-height: 0;
+    font-size: 12px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
   .hero,
   footer,
-  .card-actions {
+  .card-actions,
+  #page-error,
+  #month-table-error,
+  #month-table-loading,
+  .sr-only {
     display: none !important;
   }
 
-  .card {
-    border: 0;
+  #monthly-prayer-table {
     box-shadow: none;
+    overflow: visible;
   }
 
   #monthly-timetable {
-    padding: 0 !important;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
   }
 
+  #monthly-prayer-table .card-head {
+    padding: 4mm;
+    break-after: avoid;
+  }
+
+  .month-print-brand,
+  .month-print-period,
+  .month-print-zone {
+    display: block;
+  }
+
+  .month-table-source {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4mm;
+    break-inside: avoid;
+    break-before: avoid;
+  }
+
+  .month-print-brand {
+    color: var(--accent);
+    font-weight: 700;
+    text-align: left;
+  }
+
+  #monthly-prayer-table .card-title {
+    display: none;
+  }
+
+  .month-print-period {
+    color: var(--text);
+    font-size: 16pt;
+    font-weight: 700;
+  }
+
+  .month-print-zone {
+    margin-top: 1mm;
+    color: var(--text-secondary);
+    font-size: 9pt;
+  }
+
+  #month-table-wrap {
+    overflow: visible;
+  }
+
+  #month-table-wrap table {
+    width: 100%;
+    min-width: 0;
+    font-size: 9pt;
+    line-height: 1.3;
+  }
+
+  #month-table-wrap th,
+  #month-table-wrap td {
+    padding: 1.3mm 1mm;
+    white-space: nowrap;
+  }
+
+  #month-table-wrap th:first-child {
+    width: 24mm;
+  }
+
+  #month-table-wrap th:nth-child(2) {
+    width: 12mm;
+  }
+
+  #month-table-wrap th:nth-child(3) {
+    width: 28mm;
+  }
+
+  #month-table-wrap thead {
+    display: table-header-group;
+  }
+
+  #month-table-wrap tr {
+    break-inside: avoid;
+  }
+
+  .month-row:hover,
   .month-row-active,
   .month-row-active:hover {
     background: transparent;
     color: inherit;
+    font-weight: inherit;
   }
 }

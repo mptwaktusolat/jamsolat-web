@@ -1,5 +1,5 @@
 ---
-import { ChevronLeft, ChevronRight, Download } from "@lucide/astro";
+import { ChevronLeft, ChevronRight, Printer } from "@lucide/astro";
 
 const COLUMNS = [
   "Hijri",
@@ -22,6 +22,8 @@ const COLUMNS = [
   <div class="card-head">
     <div>
       <div class="card-title">Jadual waktu solat sebulan</div>
+      <div id="month-print-period" class="month-print-period"></div>
+      <div id="month-print-zone" class="month-print-zone"></div>
     </div>
 
     <div class="card-actions">
@@ -45,9 +47,9 @@ const COLUMNS = [
       >
         <ChevronRight size={14} aria-hidden="true" />
       </button>
-      <button type="button" id="month-print" class="pill-btn">
-        <Download size={14} aria-hidden="true" />
-        <span id="month-print-label">PDF</span>
+      <button type="button" id="month-print" class="pill-btn" disabled>
+        <Printer size={14} aria-hidden="true" />
+        <span>Print</span>
       </button>
     </div>
   </div>
@@ -93,11 +95,7 @@ const COLUMNS = [
 </section>
 
 <script>
-  import {
-    fetchPrayerTimes,
-    fetchMonthlyTimetablePDF,
-    type V2Response,
-  } from "../scripts/api";
+  import { fetchPrayerTimes, type V2Response } from "../scripts/api";
   import { formatHijriDate } from "../scripts/hijri";
 
   const TIME_KEYS = [
@@ -116,6 +114,7 @@ const COLUMNS = [
   let viewYear = 0;
   let viewMonth = 0;
   let requestId = 0;
+  let hasRenderedMonth = false;
 
   function format24(tsSec: number): string {
     const d = new Date(tsSec * 1000);
@@ -150,6 +149,29 @@ const COLUMNS = [
       const btn = document.getElementById(id) as HTMLButtonElement | null;
       if (btn) btn.disabled = disabled;
     }
+    const print = document.getElementById(
+      "month-print",
+    ) as HTMLButtonElement | null;
+    if (print) print.disabled = disabled || !hasRenderedMonth;
+  }
+
+  function updatePrintHeading() {
+    const period = document.getElementById("month-print-period");
+    const location = document.getElementById("month-print-zone");
+    const select = document.getElementById(
+      "zone-select",
+    ) as HTMLSelectElement | null;
+    if (period) {
+      const monthYear =
+        document.getElementById("month-current-full")?.textContent ?? "";
+      period.textContent = `Jadual Waktu Solat ${monthYear}`;
+    }
+    // Match the rendered table's zone, even while a different zone is loading.
+    const option = Array.from(select?.options ?? []).find(
+      (option) => option.value === zone,
+    );
+    if (location)
+      location.textContent = option?.textContent?.trim() || zone || "";
   }
 
   function showError(message: string) {
@@ -216,6 +238,8 @@ const COLUMNS = [
 
     loading.classList.add("hidden");
     wrap.classList.remove("hidden");
+    hasRenderedMonth = monthly.prayers.length > 0;
+    updatePrintHeading();
     setNavDisabled(false);
   }
 
@@ -260,40 +284,12 @@ const COLUMNS = [
   document
     .getElementById("month-next")
     ?.addEventListener("click", () => shiftMonth(1));
-  async function downloadMonthlyPDF() {
-    if (!zone) return;
+  document.getElementById("month-print")?.addEventListener("click", () => {
+    if (hasRenderedMonth) window.print();
+  });
 
-    const btn = document.getElementById(
-      "month-print",
-    ) as HTMLButtonElement | null;
-    const label = document.getElementById("month-print-label");
-    if (!btn || !label) return;
-
-    const originalLabel = label.textContent;
-    btn.disabled = true;
-    label.textContent = "Memuat turun…";
-
-    try {
-      const blob = await fetchMonthlyTimetablePDF(zone, viewYear, viewMonth);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `jadual-solat-${zone}-${viewYear}-${String(viewMonth).padStart(2, "0")}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch {
-      showError("Gagal memuat turun PDF. Sila cuba lagi.");
-    } finally {
-      btn.disabled = false;
-      label.textContent = originalLabel;
-    }
-  }
-
-  document
-    .getElementById("month-print")
-    ?.addEventListener("click", () => void downloadMonthlyPDF());
+  // Also refresh the heading when printing via the browser menu or keyboard.
+  window.addEventListener("beforeprint", updatePrintHeading);
 
   // A fresh load (or a zone change) always snaps the table back to today.
   window.addEventListener("prayerDataLoaded", (e) => {
