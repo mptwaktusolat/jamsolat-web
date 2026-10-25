@@ -203,23 +203,33 @@ import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
     }, delayMs);
   }
 
+  // Replacing identical text nodes interrupts the user's text selection.
+  function setTextIfChanged(element: HTMLElement | null, text: string) {
+    if (element && element.textContent !== text) {
+      element.textContent = text;
+    }
+  }
+
   function updateDate() {
     const now = new Date();
     const dateEl = document.getElementById("live-date");
     const hijriEl = document.getElementById("live-hijri");
-    if (dateEl) dateEl.textContent = gregorianFormatter.format(now);
+    setTextIfChanged(dateEl, gregorianFormatter.format(now));
 
     if (hijriEl) {
       const hijriDate = getHijriDate(now);
-      hijriEl.textContent = hijriDate
-        ? formatHijriDate(hijriDate, { padDay: false, yearSuffix: "H" })
-        : "";
+      setTextIfChanged(
+        hijriEl,
+        hijriDate
+          ? formatHijriDate(hijriDate, { padDay: false, yearSuffix: "H" })
+          : "",
+      );
     }
   }
 
   function setStatus(text: string) {
     const el = document.getElementById("hero-status");
-    if (el) el.textContent = text;
+    setTextIfChanged(el, text);
   }
 
   function getTomorrow(from: Date): Date {
@@ -270,9 +280,9 @@ import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
     if (!nameEl || !timeEl || !countdownEl) return;
 
     if (!prayer) {
-      nameEl.textContent = "—";
-      timeEl.textContent = "--:--";
-      countdownEl.textContent = "Memuat waktu solat…";
+      setTextIfChanged(nameEl, "—");
+      setTextIfChanged(timeEl, "--:--");
+      setTextIfChanged(countdownEl, "Memuat waktu solat…");
       countdownEl.style.color = "";
       renderProgress(0);
       return;
@@ -282,11 +292,14 @@ import { ArrowDown, ChevronDown, LocateFixed } from "@lucide/astro";
     const secondsLeft = getCountdownSeconds(prayer, nowSec);
     const urgencyColor = getCountdownColor(secondsLeft);
 
-    nameEl.textContent = prayer.name;
-    timeEl.textContent = formatPrayerTime(prayer.ts);
-    countdownEl.textContent = isTomorrow
-      ? `dalam ${formatCountdownLong(secondsLeft)} · esok`
-      : `dalam ${formatCountdownLong(secondsLeft)}`;
+    setTextIfChanged(nameEl, prayer.name);
+    setTextIfChanged(timeEl, formatPrayerTime(prayer.ts));
+    setTextIfChanged(
+      countdownEl,
+      isTomorrow
+        ? `dalam ${formatCountdownLong(secondsLeft)} · esok`
+        : `dalam ${formatCountdownLong(secondsLeft)}`,
+    );
     countdownEl.style.color = urgencyColor;
 
     const prevPrayer = getCurrentPrayer(currentPrayers, nowSec);
