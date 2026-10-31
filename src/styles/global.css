@@ -584,6 +584,31 @@ select.zone-hidden-select optgroup {
 
 /* Monthly table */
 
+@media screen {
+  #monthly-prayer-table {
+    /* Clip the rounded corners without creating a sticky scroll container. */
+    overflow: clip;
+  }
+
+  .month-table-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: var(--month-header-height);
+    overflow: hidden;
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .month-table-sticky-header + #month-table-wrap {
+    margin-top: calc(-1 * var(--month-header-height, 0px));
+  }
+
+  .month-table-sticky-header th,
+  #month-table-wrap th {
+    background: var(--bg-secondary);
+  }
+}
+
 .monthly-timetable {
   padding-block: 2rem;
 }
@@ -653,6 +678,7 @@ select.zone-hidden-select optgroup {
   #page-error,
   #month-table-error,
   #month-table-loading,
+  .month-table-sticky-header,
   .sr-only {
     display: none !important;
   }

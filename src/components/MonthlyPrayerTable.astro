@@ -116,6 +116,40 @@ const COLUMNS = [
   let requestId = 0;
   let hasRenderedMonth = false;
 
+  // Implement sticky header
+  const wrap = document.getElementById("month-table-wrap");
+  const table = wrap?.querySelector("table");
+  const header = table?.tHead;
+  if (wrap && table && header) {
+    const stickyHeader = document.createElement("div");
+    stickyHeader.className = "month-table-sticky-header";
+    stickyHeader.setAttribute("aria-hidden", "true");
+    stickyHeader.hidden = true;
+    const stickyTable = table.cloneNode(false) as HTMLTableElement;
+    stickyTable.appendChild(header.cloneNode(true));
+    stickyHeader.appendChild(stickyTable);
+    wrap.before(stickyHeader);
+
+    const syncHorizontalScroll = () => {
+      stickyHeader.scrollLeft = wrap.scrollLeft;
+    };
+    const sizeHeader = () => {
+      stickyHeader.hidden = table.offsetHeight === 0;
+      stickyTable.style.width = `${table.getBoundingClientRect().width}px`;
+      wrap.parentElement?.style.setProperty(
+        "--month-header-height",
+        `${header.getBoundingClientRect().height}px`,
+      );
+      syncHorizontalScroll();
+    };
+
+    wrap.addEventListener("scroll", syncHorizontalScroll, { passive: true });
+    const observer = new ResizeObserver(sizeHeader);
+    observer.observe(table);
+    observer.observe(header);
+    sizeHeader();
+  }
+
   function format24(tsSec: number): string {
     const d = new Date(tsSec * 1000);
     const h = String(d.getHours()).padStart(2, "0");
