@@ -52,3 +52,6 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MALAYSIA_WAKTU_SOLAT }}
           channelId: live
           projectId: malaysia-waktu-solat
+          # pin to a working version. See https://github.com/firebase/firebase-tools/issues/11335
+          # hopefully will be temporary
+          firebaseToolsVersion: "15.34.0"
